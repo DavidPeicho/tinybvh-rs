@@ -7,9 +7,9 @@
 
 namespace tinybvh {
 
-std::unique_ptr<BVH> new_bvh();
+using BVHLayout = BVH::BVHLayout;
 
-// void delete_bvh(std::unique_ptr<BVH>& ptr);
+std::unique_ptr<BVH> new_bvh();
 
 }
 
