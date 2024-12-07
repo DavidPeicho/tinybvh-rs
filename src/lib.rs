@@ -1,18 +1,9 @@
 mod errors;
 mod ffi;
-use std::marker::PhantomData;
+mod node;
 
-pub struct NodeId(u32);
-
-impl NodeId {
-    pub fn root() -> Self {
-        Self {0: 0}
-    }
-
-    pub fn new(id: u32) -> Self {
-        Self {0: id}
-    }
-}
+pub use node::*;
+use std::{marker::PhantomData, slice::from_raw_parts};
 
 #[enumflags2::bitflags]
 #[repr(u16)]
@@ -108,6 +99,12 @@ impl<'a> BVH<'a> {
         self.layout
     }
 
+    pub fn as_wald32(&self) -> &[BVHNode] {
+        let ptr = ffi::ffi::bvh_nodes(&self.inner) as *const BVHNode;
+        let count = ffi::ffi::bvh_nodes_count(&self.inner);
+        unsafe { from_raw_parts(ptr, count as usize) }
+    }
+
     fn validate_layout(&self, layout: BVHLayoutType) -> Result<(), errors::MissingLayout> {
         match self.layout.contains(layout) {
             true => Ok(()),
@@ -188,6 +185,10 @@ mod tests {
         let triangles = plane();
         let bvh = BVH::new(&triangles, 2);
         assert_eq!(bvh.primitive_count(NodeId::root()), 2);
+
+        let nodes = bvh.as_wald32();
+        println!("{:?} {:?}", nodes[0].min, nodes[0].max);
+        assert_eq!(nodes.len(), 2);
     }
 
     #[test]

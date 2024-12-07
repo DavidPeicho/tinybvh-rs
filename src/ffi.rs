@@ -20,6 +20,7 @@ pub(crate) mod ffi {
         pub type BVH;
         pub type bvhvec4;
         pub type BVHLayout;
+		pub type BVHNode;
 
         pub fn new_bvh() -> UniquePtr<BVH>;
 
@@ -32,6 +33,9 @@ pub(crate) mod ffi {
         pub fn SAHCost(self: &BVH, node_idx: u32) -> f32;
         // pub fn node_count(const BVHLayout layout) -> i32;
 	    pub fn PrimCount(self: &BVH, node_idx: u32) -> i32;
+
+		pub fn bvh_nodes(bvh: &BVH) -> *const BVHNode;
+		pub fn bvh_nodes_count(bvh: &BVH) -> u32;
     }
 
 }

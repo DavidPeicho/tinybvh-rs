@@ -8,8 +8,12 @@
 namespace tinybvh {
 
 using BVHLayout = BVH::BVHLayout;
+using BVHNode = BVH::BVHNode;
 
 std::unique_ptr<BVH> new_bvh();
+
+const BVHNode* bvh_nodes(const BVH&);
+unsigned bvh_nodes_count(const BVH&);
 
 }
 
