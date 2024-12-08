@@ -9,15 +9,15 @@ use std::{marker::PhantomData, slice::from_raw_parts};
 #[repr(u16)]
 #[derive(Copy, Clone, Debug, PartialEq)]
 pub enum BVHLayoutType {
-    Wald32Byte,	// Default format, obtained using BVH::Build variants.
-    AilaLaine,			// For GPU rendering. Obtained by converting WALD_32BYTE.
-    AltSoa,			// For faster CPU rendering. Obtained by converting WALD_32BYTE.
-    Verbose,			// For BVH optimizing. Obtained by converting WALD_32BYTE.
-    BasicBVH4,			// Input for BVH4_GPU conversion. Obtained by converting WALD_32BYTE.
-    BVH4GPU,			// For fast GPU rendering. Obtained by converting BASIC_BVH4.
-    BVH4Afra,			// For fast CPU rendering. Obtained by converting BASIC_BVH4.
-    BasicBVH8,			// Input for CWBVH. Obtained by converting WALD_32BYTE.
-    CWBVH				// Fastest GPU rendering. Obtained by converting BASIC_BVH8.
+    Wald32Byte, // Default format, obtained using BVH::Build variants.
+    AilaLaine,  // For GPU rendering. Obtained by converting WALD_32BYTE.
+    AltSoa,     // For faster CPU rendering. Obtained by converting WALD_32BYTE.
+    Verbose,    // For BVH optimizing. Obtained by converting WALD_32BYTE.
+    BasicBVH4,  // Input for BVH4_GPU conversion. Obtained by converting WALD_32BYTE.
+    BVH4GPU,    // For fast GPU rendering. Obtained by converting BASIC_BVH4.
+    BVH4Afra,   // For fast CPU rendering. Obtained by converting BASIC_BVH4.
+    BasicBVH8,  // Input for CWBVH. Obtained by converting WALD_32BYTE.
+    CWBVH,      // Fastest GPU rendering. Obtained by converting BASIC_BVH8.
 }
 
 impl Into<ffi::ffi::BVHLayout> for BVHLayoutType {
@@ -31,7 +31,7 @@ impl Into<ffi::ffi::BVHLayout> for BVHLayoutType {
             BVHLayoutType::BVH4GPU => ffi::ffi::BVHLayout::BVH4_GPU,
             BVHLayoutType::BVH4Afra => ffi::ffi::BVHLayout::BVH4_AFRA,
             BVHLayoutType::BasicBVH8 => ffi::ffi::BVHLayout::BASIC_BVH8,
-            BVHLayoutType::CWBVH => ffi::ffi::BVHLayout::CWBVH
+            BVHLayoutType::CWBVH => ffi::ffi::BVHLayout::CWBVH,
         }
     }
 }
@@ -39,12 +39,13 @@ impl Into<ffi::ffi::BVHLayout> for BVHLayoutType {
 pub struct BVH<'a> {
     inner: cxx::UniquePtr<ffi::ffi::BVH>,
     layout: enumflags2::BitFlags<BVHLayoutType>,
-    _phantom: PhantomData<&'a [f32; 4]>
+    _phantom: PhantomData<&'a [f32; 4]>,
 }
 
 impl<'a> BVH<'a> {
-    pub fn new(vertices: &'a [[f32; 4]], primitive_count: u32) -> Self {
+    pub fn new(vertices: &'a [[f32; 4]]) -> Self {
         let mut inner: cxx::UniquePtr<ffi::ffi::BVH> = ffi::ffi::new_bvh();
+        let primitive_count = vertices.len() as u32 / 3;
         unsafe {
             let ptr = vertices.as_ptr() as *const ffi::ffi::bvhvec4;
             inner.pin_mut().Build(ptr, primitive_count);
@@ -53,7 +54,7 @@ impl<'a> BVH<'a> {
         BVH {
             inner,
             layout: enumflags2::make_bitflags!(BVHLayoutType::{Wald32Byte}),
-            _phantom: Default::default()
+            _phantom: Default::default(),
         }
     }
 
@@ -68,22 +69,27 @@ impl<'a> BVH<'a> {
 
     pub fn convert(&mut self, to_layout: BVHLayoutType) -> Result<(), errors::MissingLayout> {
         let from_layout = match to_layout {
-            BVHLayoutType::AilaLaine|BVHLayoutType::AltSoa|
-            BVHLayoutType::Verbose|BVHLayoutType::BasicBVH4|
-            BVHLayoutType::BasicBVH8 => BVHLayoutType::Wald32Byte,
-            BVHLayoutType::BVH4GPU|BVHLayoutType::BVH4Afra => BVHLayoutType::BasicBVH4,
+            BVHLayoutType::AilaLaine
+            | BVHLayoutType::AltSoa
+            | BVHLayoutType::Verbose
+            | BVHLayoutType::BasicBVH4
+            | BVHLayoutType::BasicBVH8 => BVHLayoutType::Wald32Byte,
+            BVHLayoutType::BVH4GPU | BVHLayoutType::BVH4Afra => BVHLayoutType::BasicBVH4,
             BVHLayoutType::CWBVH => BVHLayoutType::BasicBVH8,
             BVHLayoutType::Wald32Byte => BVHLayoutType::Verbose,
         };
         self.validate_layout(from_layout)?;
-        self.inner.pin_mut().Convert(from_layout.into(), to_layout.into(), false);
+        self.inner
+            .pin_mut()
+            .Convert(from_layout.into(), to_layout.into(), false);
         Ok(())
     }
 
+    /// Doesn't include the **root** node
     pub fn node_count(&self, layout: BVHLayoutType) -> Option<u32> {
         match self.validate_layout(layout) {
             Ok(_) => Some(self.inner.NodeCount(layout.into()) as u32),
-            Err(_) => None
+            Err(_) => None,
         }
     }
 
@@ -108,14 +114,18 @@ impl<'a> BVH<'a> {
     fn validate_layout(&self, layout: BVHLayoutType) -> Result<(), errors::MissingLayout> {
         match self.layout.contains(layout) {
             true => Ok(()),
-            false => Err(errors::MissingLayout::new(layout))
+            false => Err(errors::MissingLayout::new(layout)),
         }
     }
 }
 
+//
+// Tests
+//
+
 #[cfg(test)]
 mod tests {
-    use crate::{NodeId, BVHLayoutType, BVH};
+    use crate::{BVHLayoutType, BVHNode, BVH};
     use enumflags2::make_bitflags;
 
     const CUBE_INDICES: [u16; 36] = [
@@ -164,10 +174,20 @@ mod tests {
             [-1.0, 1.0, 0.0, 0.0],
             [1.0, 1.0, 0.0, 0.0],
             [-1.0, 0.0, 0.0, 0.0],
-
             [1.0, 1.0, 0.0, 0.0],
             [1.0, 0.0, 0.0, 0.0],
             [-1.0, 0.0, 0.0, 0.0],
+        ]
+    }
+
+    fn split_triangles() -> Vec<[f32; 4]> {
+        vec![
+            [-2.0, 1.0, -1.0, 0.0],
+            [-1.0, 1.0, -1.0, 0.0],
+            [-2.0, 0.0, -1.0, 0.0],
+            [2.0, 1.0, -1.0, 0.0],
+            [2.0, 0.0, -1.0, 0.0],
+            [1.0, 0.0, -1.0, 0.0],
         ]
     }
 
@@ -181,20 +201,9 @@ mod tests {
     }
 
     #[test]
-    fn create_bvh() {
-        let triangles = plane();
-        let bvh = BVH::new(&triangles, 2);
-        assert_eq!(bvh.primitive_count(NodeId::root()), 2);
-
-        let nodes = bvh.as_wald32();
-        println!("{:?} {:?}", nodes[0].min, nodes[0].max);
-        assert_eq!(nodes.len(), 2);
-    }
-
-    #[test]
     fn layout_info() {
         let triangles: Vec<[f32; 4]> = plane();
-        let bvh = BVH::new(&triangles, 2);
+        let bvh = BVH::new(&triangles);
 
         assert_eq!(bvh.layout(), make_bitflags!(BVHLayoutType::{Wald32Byte}));
 
@@ -210,9 +219,50 @@ mod tests {
     }
 
     #[test]
+    fn layout_wald32() {
+        let triangles = split_triangles();
+        let bvh = BVH::new(&triangles);
+        assert_eq!(bvh.node_count(BVHLayoutType::Wald32Byte), Some(3));
+
+        let nodes = bvh.as_wald32();
+        println!("{:?}", nodes);
+
+        assert_eq!(
+            nodes,
+            [
+                BVHNode {
+                    min: [-2.0, 0.0, -1.0],
+                    max: [2.0, 1.0, -1.0],
+                    left_first: 2,
+                    tri_count: 0
+                },
+                BVHNode {
+                    min: [0.0, 0.0, 0.0],
+                    max: [0.0, 0.0, 0.0],
+                    left_first: 0,
+                    tri_count: 0
+                },
+                BVHNode {
+                    min: [-2.0, 0.0, -1.0],
+                    max: [-1.0, 1.0, -1.0],
+                    left_first: 0,
+                    tri_count: 1
+                },
+                BVHNode {
+                    min: [1.0, 0.0, -1.0],
+                    max: [2.0, 1.0, -1.0],
+                    left_first: 1,
+                    tri_count: 1
+                },
+            ]
+        );
+        assert!(!nodes[0].is_leaf());
+    }
+
+    #[test]
     fn compact() {
         let triangles = cube();
-        let mut bvh = BVH::new(&triangles, CUBE_INDICES.len() as u32 / 3);
+        let mut bvh = BVH::new(&triangles);
 
         assert_eq!(bvh.node_count(BVHLayoutType::Wald32Byte), Some(11));
         bvh.compact(BVHLayoutType::Wald32Byte).unwrap();
@@ -222,9 +272,15 @@ mod tests {
     #[test]
     fn convert() {
         let triangles = cube();
-        let mut bvh = BVH::new(&triangles, CUBE_INDICES.len() as u32 / 3);
+        let mut bvh = BVH::new(&triangles);
 
-        for layout in [BVHLayoutType::AilaLaine,BVHLayoutType::AltSoa,BVHLayoutType::Verbose,BVHLayoutType::BasicBVH4,BVHLayoutType::BasicBVH8] {
+        for layout in [
+            BVHLayoutType::AilaLaine,
+            BVHLayoutType::AltSoa,
+            BVHLayoutType::Verbose,
+            BVHLayoutType::BasicBVH4,
+            BVHLayoutType::BasicBVH8,
+        ] {
             bvh.convert(layout).unwrap();
         }
     }
