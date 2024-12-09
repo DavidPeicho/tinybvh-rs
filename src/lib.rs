@@ -1,7 +1,8 @@
+mod cxx_ffi;
 mod errors;
-mod ffi;
 mod node;
 
+pub(crate) use cxx_ffi::ffi;
 pub use node::*;
 use std::{marker::PhantomData, slice::from_raw_parts};
 
@@ -20,34 +21,50 @@ pub enum BVHLayoutType {
     CWBVH,      // Fastest GPU rendering. Obtained by converting BASIC_BVH8.
 }
 
-impl Into<ffi::ffi::BVHLayout> for BVHLayoutType {
-    fn into(self) -> ffi::ffi::BVHLayout {
-        match self {
-            BVHLayoutType::Wald32Byte => ffi::ffi::BVHLayout::WALD_32BYTE,
-            BVHLayoutType::AilaLaine => ffi::ffi::BVHLayout::AILA_LAINE,
-            BVHLayoutType::AltSoa => ffi::ffi::BVHLayout::ALT_SOA,
-            BVHLayoutType::Verbose => ffi::ffi::BVHLayout::VERBOSE,
-            BVHLayoutType::BasicBVH4 => ffi::ffi::BVHLayout::BASIC_BVH4,
-            BVHLayoutType::BVH4GPU => ffi::ffi::BVHLayout::BVH4_GPU,
-            BVHLayoutType::BVH4Afra => ffi::ffi::BVHLayout::BVH4_AFRA,
-            BVHLayoutType::BasicBVH8 => ffi::ffi::BVHLayout::BASIC_BVH8,
-            BVHLayoutType::CWBVH => ffi::ffi::BVHLayout::CWBVH,
+impl From<BVHLayoutType> for ffi::BVHLayout {
+    fn from(value: BVHLayoutType) -> Self {
+        match value {
+            BVHLayoutType::Wald32Byte => ffi::BVHLayout::WALD_32BYTE,
+            BVHLayoutType::AilaLaine => ffi::BVHLayout::AILA_LAINE,
+            BVHLayoutType::AltSoa => ffi::BVHLayout::ALT_SOA,
+            BVHLayoutType::Verbose => ffi::BVHLayout::VERBOSE,
+            BVHLayoutType::BasicBVH4 => ffi::BVHLayout::BASIC_BVH4,
+            BVHLayoutType::BVH4GPU => ffi::BVHLayout::BVH4_GPU,
+            BVHLayoutType::BVH4Afra => ffi::BVHLayout::BVH4_AFRA,
+            BVHLayoutType::BasicBVH8 => ffi::BVHLayout::BASIC_BVH8,
+            BVHLayoutType::CWBVH => ffi::BVHLayout::CWBVH,
         }
     }
 }
 
+// impl Into<ffi::BVHLayout> for BVHLayoutType {
+//     fn into(self) -> ffi::BVHLayout {
+//         match self {
+//             BVHLayoutType::Wald32Byte => ffi::BVHLayout::WALD_32BYTE,
+//             BVHLayoutType::AilaLaine => ffi::BVHLayout::AILA_LAINE,
+//             BVHLayoutType::AltSoa => ffi::BVHLayout::ALT_SOA,
+//             BVHLayoutType::Verbose => ffi::BVHLayout::VERBOSE,
+//             BVHLayoutType::BasicBVH4 => ffi::BVHLayout::BASIC_BVH4,
+//             BVHLayoutType::BVH4GPU => ffi::BVHLayout::BVH4_GPU,
+//             BVHLayoutType::BVH4Afra => ffi::BVHLayout::BVH4_AFRA,
+//             BVHLayoutType::BasicBVH8 => ffi::BVHLayout::BASIC_BVH8,
+//             BVHLayoutType::CWBVH => ffi::BVHLayout::CWBVH,
+//         }
+//     }
+// }
+
 pub struct BVH<'a> {
-    inner: cxx::UniquePtr<ffi::ffi::BVH>,
+    inner: cxx::UniquePtr<ffi::BVH>,
     layout: enumflags2::BitFlags<BVHLayoutType>,
     _phantom: PhantomData<&'a [f32; 4]>,
 }
 
 impl<'a> BVH<'a> {
     pub fn new(vertices: &'a [[f32; 4]]) -> Self {
-        let mut inner: cxx::UniquePtr<ffi::ffi::BVH> = ffi::ffi::new_bvh();
+        let mut inner: cxx::UniquePtr<ffi::BVH> = ffi::new_bvh();
         let primitive_count = vertices.len() as u32 / 3;
         unsafe {
-            let ptr = vertices.as_ptr() as *const ffi::ffi::bvhvec4;
+            let ptr = vertices.as_ptr() as *const ffi::bvhvec4;
             inner.pin_mut().Build(ptr, primitive_count);
         }
 
@@ -98,7 +115,7 @@ impl<'a> BVH<'a> {
     }
 
     pub fn sah_cost(&self, id: NodeId) -> f32 {
-        self.inner.SAHCost(id.0) as f32
+        self.inner.SAHCost(id.0)
     }
 
     pub fn layout(&self) -> enumflags2::BitFlags<BVHLayoutType> {
@@ -107,8 +124,8 @@ impl<'a> BVH<'a> {
 
     pub fn as_wald32(&self) -> &[BVHNode] {
         // TODO: Make that safer with cxx
-        let ptr = ffi::ffi::bvh_nodes(&self.inner) as *const BVHNode;
-        let count = ffi::ffi::bvh_nodes_count(&self.inner);
+        let ptr = ffi::bvh_nodes(&self.inner) as *const BVHNode;
+        let count = ffi::bvh_nodes_count(&self.inner);
         unsafe { from_raw_parts(ptr, count as usize) }
     }
 

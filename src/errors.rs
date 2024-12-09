@@ -1,17 +1,21 @@
-use std::fmt;
 use crate::BVHLayoutType;
+use std::fmt;
 
 pub struct MissingLayout(BVHLayoutType);
 
 impl MissingLayout {
     pub fn new(layout: BVHLayoutType) -> Self {
-        Self { 0: layout }
+        Self(layout)
     }
 }
 
 impl fmt::Debug for MissingLayout {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Missing layout {:?}. Convert the bvh first using convert(layout)", self.0)
+        write!(
+            f,
+            "Missing layout {:?}. Convert the bvh first using convert(layout)",
+            self.0
+        )
     }
 }
 
@@ -25,10 +29,8 @@ impl fmt::Debug for BVHCompactError {
         match self {
             BVHCompactError::UnsupportedLayout(l) => {
                 write!(f, "Unsupported layout type for operation: {:?}", l)
-            },
-            Self::MissingLayout(l) => {
-                MissingLayout::new(*l).fmt(f)
             }
+            Self::MissingLayout(l) => MissingLayout::new(*l).fmt(f),
         }
     }
 }

@@ -3,7 +3,10 @@
 
 #include <memory>
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wall"
 #include "tinybvh-rs/ffi/tinybvh/tiny_bvh.h"
+#pragma GCC diagnostic pop
 
 namespace tinybvh {
 
