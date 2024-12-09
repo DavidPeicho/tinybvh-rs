@@ -2,6 +2,7 @@ fn main() {
     cxx_build::bridge("src/cxx_ffi.rs")
         .file("ffi/src/tinybvh.cpp")
         .std("c++20")
+        .flag("-march=native") // SIMD
         .compile("tinybvh");
 
     println!("cargo:rerun-if-changed=src/lib.rs");
