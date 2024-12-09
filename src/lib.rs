@@ -106,6 +106,7 @@ impl<'a> BVH<'a> {
     }
 
     pub fn as_wald32(&self) -> &[BVHNode] {
+        // TODO: Make that safer with cxx
         let ptr = ffi::ffi::bvh_nodes(&self.inner) as *const BVHNode;
         let count = ffi::ffi::bvh_nodes_count(&self.inner);
         unsafe { from_raw_parts(ptr, count as usize) }
@@ -223,12 +224,8 @@ mod tests {
         let triangles = split_triangles();
         let bvh = BVH::new(&triangles);
         assert_eq!(bvh.node_count(BVHLayoutType::Wald32Byte), Some(3));
-
-        let nodes = bvh.as_wald32();
-        println!("{:?}", nodes);
-
         assert_eq!(
-            nodes,
+            bvh.as_wald32(),
             [
                 BVHNode {
                     min: [-2.0, 0.0, -1.0],
@@ -236,12 +233,7 @@ mod tests {
                     left_first: 2,
                     tri_count: 0
                 },
-                BVHNode {
-                    min: [0.0, 0.0, 0.0],
-                    max: [0.0, 0.0, 0.0],
-                    left_first: 0,
-                    tri_count: 0
-                },
+                BVHNode::default(),
                 BVHNode {
                     min: [-2.0, 0.0, -1.0],
                     max: [-1.0, 1.0, -1.0],
@@ -256,7 +248,6 @@ mod tests {
                 },
             ]
         );
-        assert!(!nodes[0].is_leaf());
     }
 
     #[test]
