@@ -4,11 +4,11 @@ pub struct NodeId(pub u32);
 
 impl NodeId {
     pub fn root() -> Self {
-        Self { 0: 0 }
+        Self(0)
     }
 
     pub fn new(id: u32) -> Self {
-        Self { 0: id }
+        Self(id)
     }
 }
 
