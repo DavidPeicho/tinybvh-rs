@@ -1,10 +1,12 @@
 mod cxx_ffi;
 mod errors;
 mod layouts;
+mod ray;
 mod traversal;
 
 pub(crate) use cxx_ffi::ffi;
 pub use layouts::*;
+pub use ray::*;
 pub use traversal::*;
 
 pub struct NodeId(pub u32);
@@ -19,34 +21,13 @@ impl NodeId {
     }
 }
 
-#[repr(C)]
-#[derive(Clone, Copy, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct Intersection {
-    t: f32,
-    u: f32,
-    v: f32,
-    prim: u32,
-}
-
-#[repr(C, align(16))]
-#[derive(Clone, Copy, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct Ray {
-    origin: [f32; 3],
-    padding_0: u32,
-    dir: [f32; 3],
-    padding_1: u32,
-    r_d: [f32; 3],
-    padding_2: u32,
-    hit: Intersection,
-}
-
 //
 // Tests
 //
 
 #[cfg(test)]
 mod tests {
-    use crate::{BVHNode, Node4, BVH, BVH4};
+    use crate::{BVHNode, Intersector, Node4, Ray, BVH, BVH4};
 
     const CUBE_INDICES: [u16; 36] = [
         0, 1, 2, 2, 3, 0, // top
@@ -183,5 +164,11 @@ mod tests {
             },
         ];
         assert_eq!(bvh4.nodes(), expected);
+
+        let origin = [-1.5, 0.5, 0.0];
+        let mut ray = Ray::new(origin, [0.0, 0.0, -1.0]);
+        bvh4.intersect(&mut ray);
+        println!("{:?}", ray.hit);
+        // assert_eq!(bvh4.intersect(&mut ray), 0);
     }
 }

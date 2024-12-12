@@ -1,3 +1,8 @@
+// Ensure `Intersection` always has a trivial move ctor and no destructor
+unsafe impl cxx::ExternType for crate::Intersection {
+    type Id = cxx::type_id!("tinybvh::Intersection");
+    type Kind = cxx::kind::Trivial;
+}
 // Ensure `Ray` always has a trivial move ctor and no destructor
 unsafe impl cxx::ExternType for crate::Ray {
     type Id = cxx::type_id!("tinybvh::Ray");
@@ -18,6 +23,7 @@ pub(crate) mod ffi {
         pub type bvhvec4;
         pub type BVHNode;
         pub type Ray = crate::Ray;
+        pub type Intersection = crate::Intersection;
 
         // pub type Ray;
 
