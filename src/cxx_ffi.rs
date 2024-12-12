@@ -1,3 +1,14 @@
+// Ensure `Ray` always has a trivial move ctor and no destructor
+unsafe impl cxx::ExternType for crate::Ray {
+    type Id = cxx::type_id!("tinybvh::Ray");
+    type Kind = cxx::kind::Trivial;
+}
+// Ensure `BVH4::BVHNode` always has a trivial move ctor and no destructor
+unsafe impl cxx::ExternType for crate::Node4 {
+    type Id = cxx::type_id!("tinybvh::BVHNode4");
+    type Kind = cxx::kind::Trivial;
+}
+
 #[cxx::bridge(namespace = "tinybvh")]
 pub(crate) mod ffi {
     unsafe extern "C++" {
@@ -6,8 +17,9 @@ pub(crate) mod ffi {
         pub type BVH;
         pub type bvhvec4;
         pub type BVHNode;
-        pub type BVHNode4;
-        pub type BVHNode8;
+        pub type Ray = crate::Ray;
+
+        // pub type Ray;
 
         // BVH
         pub fn new_bvh() -> UniquePtr<BVH>;
@@ -21,9 +33,11 @@ pub(crate) mod ffi {
 
         // BVH4
         pub type BVH4;
+        pub type BVHNode4 = crate::Node4;
         pub fn new_bvh4() -> UniquePtr<BVH4>;
         pub fn bvh4_nodes(bvh: &BVH4) -> *const BVHNode4;
         pub fn bvh4_nodes_count(bvh: &BVH4) -> u32;
         pub fn ConvertFrom(self: Pin<&mut BVH4>, original: &BVH);
+        pub fn Intersect(self: &BVH4, original: &mut Ray) -> i32;
     }
 }

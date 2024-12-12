@@ -1,9 +1,11 @@
 mod cxx_ffi;
 mod errors;
 mod layouts;
+mod traversal;
 
 pub(crate) use cxx_ffi::ffi;
 pub use layouts::*;
+pub use traversal::*;
 
 pub struct NodeId(pub u32);
 
@@ -15,6 +17,27 @@ impl NodeId {
     pub fn new(id: u32) -> Self {
         Self(id)
     }
+}
+
+#[repr(C)]
+#[derive(Clone, Copy, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct Intersection {
+    t: f32,
+    u: f32,
+    v: f32,
+    prim: u32,
+}
+
+#[repr(C, align(16))]
+#[derive(Clone, Copy, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct Ray {
+    origin: [f32; 3],
+    padding_0: u32,
+    dir: [f32; 3],
+    padding_1: u32,
+    r_d: [f32; 3],
+    padding_2: u32,
+    hit: Intersection,
 }
 
 //
@@ -136,8 +159,6 @@ mod tests {
         let bvh: BVH<'_> = BVH::new(&triangles);
         let bvh4: BVH4<'_> = BVH4::new(&bvh);
 
-        println!("{:?}", bvh4.nodes());
-
         let expected = [
             Node4 {
                 min: [-2.0, 0.0, -1.0],
@@ -157,11 +178,10 @@ mod tests {
                 min: [1.0, 0.0, -1.0],
                 max: [2.0, 1.0, -1.0],
                 tri_count: 1,
+                first_tri: 1,
                 ..Default::default()
             },
         ];
-        // assert_eq!(bvh4.nodes(), expected);
-        println!("{:?}", bvh4.nodes()[3]);
-        println!("{:?}", expected[3]);
+        assert_eq!(bvh4.nodes(), expected);
     }
 }

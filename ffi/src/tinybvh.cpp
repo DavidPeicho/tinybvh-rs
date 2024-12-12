@@ -12,7 +12,7 @@ unsigned bvh_nodes_count(const BVH& bvh) { return bvh.usedNodes; }
 /** BVH4 */
 
 std::unique_ptr<BVH4> new_bvh4() { return std::make_unique<BVH4>(); }
-const BVHNode4* bvh4_nodes(const BVH4& bvh) { return bvh.bvh4Node; }
+const BVH4::BVHNode* bvh4_nodes(const BVH4& bvh) { return bvh.bvh4Node; }
 unsigned bvh4_nodes_count(const BVH4& bvh) { return bvh.usedNodes; }
 
 /** BVH8 */

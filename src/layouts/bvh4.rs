@@ -1,9 +1,9 @@
-use std::{fmt::Debug, marker::PhantomData, slice::from_raw_parts};
+use std::{fmt::Debug, marker::PhantomData, pin::Pin, slice::from_raw_parts};
 
-use crate::{ffi, BVH};
+use crate::{ffi, Intersector, Ray, BVH};
 
 #[repr(C)]
-#[derive(Clone, Copy, Default, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Clone, Copy, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 // 4-wide (aka 'shallow') node
 pub struct Node4 {
     pub min: [f32; 3],
@@ -14,18 +14,6 @@ pub struct Node4 {
     pub child_count: u32,
     pub padding: [u32; 3],
 }
-
-// impl PartialEq for Node4 {
-//     fn eq(&self, other: &Self) -> bool {
-//         if self.first_tri != other.first_tri
-//             || self.tri_count != other.tri_count
-//             || self.child_count != other.child_count
-//         {
-//             return false;
-//         }
-//         self.child.eq(other.child) &&
-//     }
-// }
 
 impl Node4 {
     pub fn is_leaf(&self) -> bool {
@@ -38,6 +26,7 @@ impl Debug for Node4 {
         f.debug_struct("Node4")
             .field("min", &self.min)
             .field("max", &self.max)
+            .field("first_tri", &self.first_tri)
             .field("tri_count", &self.tri_count)
             .field("child", &self.child)
             .field("child_count", &self.child_count)
@@ -74,5 +63,11 @@ impl<'a> BVH4<'a> {
         let ptr = ffi::bvh4_nodes(&self.inner) as *const Node4;
         let count = ffi::bvh4_nodes_count(&self.inner);
         unsafe { from_raw_parts(ptr, count as usize) }
+    }
+}
+
+impl Intersector for BVH4<'_> {
+    fn intersect(&self, ray: &mut Ray) -> u32 {
+        self.inner.Intersect(ray) as u32
     }
 }
