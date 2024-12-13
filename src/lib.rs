@@ -28,6 +28,7 @@ impl NodeId {
 #[cfg(test)]
 mod tests {
     use crate::{BVHNode, Intersector, Node4, Ray, BVH, BVH4};
+    use approx::assert_relative_eq;
 
     const CUBE_INDICES: [u16; 36] = [
         0, 1, 2, 2, 3, 0, // top
@@ -165,10 +166,20 @@ mod tests {
         ];
         assert_eq!(bvh4.nodes(), expected);
 
-        let origin = [-1.5, 0.5, 0.0];
-        let mut ray = Ray::new(origin, [0.0, 0.0, -1.0]);
-        bvh4.intersect(&mut ray);
-        println!("{:?}", ray.hit);
-        // assert_eq!(bvh4.intersect(&mut ray), 0);
+        // Intersection testing
+
+        let mut ray: Ray = Ray::new([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]);
+        assert_eq!(bvh4.intersect(&mut ray), 1);
+        assert_relative_eq!(ray.hit.t, f32::MAX);
+
+        let mut ray: Ray = Ray::new([-1.5, 0.5, 0.0], [0.0, 0.0, -1.0]);
+        assert_eq!(bvh4.intersect(&mut ray), 2);
+        assert_relative_eq!(ray.hit.t, 1.0);
+        assert_eq!(ray.hit.prim, 0);
+
+        let mut ray: Ray = Ray::new([1.5, 0.45, 0.0], [0.0, 0.0, -1.0]);
+        assert_eq!(bvh4.intersect(&mut ray), 2);
+        assert_relative_eq!(ray.hit.t, 1.0);
+        assert_eq!(ray.hit.prim, 1);
     }
 }

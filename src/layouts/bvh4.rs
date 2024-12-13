@@ -3,7 +3,7 @@ use std::{fmt::Debug, marker::PhantomData, pin::Pin, slice::from_raw_parts};
 use crate::{ffi, Intersector, Ray, BVH};
 
 #[repr(C)]
-#[derive(Clone, Copy, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 // 4-wide (aka 'shallow') node
 pub struct Node4 {
     pub min: [f32; 3],
@@ -18,20 +18,6 @@ pub struct Node4 {
 impl Node4 {
     pub fn is_leaf(&self) -> bool {
         self.tri_count > 0
-    }
-}
-
-impl Debug for Node4 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("Node4")
-            .field("min", &self.min)
-            .field("max", &self.max)
-            .field("first_tri", &self.first_tri)
-            .field("tri_count", &self.tri_count)
-            .field("child", &self.child)
-            .field("child_count", &self.child_count)
-            .field("padding", &self.padding)
-            .finish()
     }
 }
 

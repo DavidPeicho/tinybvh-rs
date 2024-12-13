@@ -9,3 +9,6 @@ cxx = "1.0"
 
 [build-dependencies]
 cxx-build = "1.0"
+
+[dev-dependencies]
+approx = "0.5.1"
