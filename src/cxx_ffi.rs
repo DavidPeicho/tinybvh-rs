@@ -19,15 +19,16 @@ pub(crate) mod ffi {
     unsafe extern "C++" {
         include!("tinybvh-rs/ffi/include/tinybvh.h");
 
-        pub type BVH;
-        pub type bvhvec4;
         pub type BVHNode;
+
+        // Utils
+        pub type bvhvec4;
         pub type Ray = crate::Ray;
         pub type Intersection = crate::Intersection;
-
-        // pub type Ray;
+        pub fn ray_new(origin: &[f32; 3], dir: &[f32; 3]) -> Ray;
 
         // BVH
+        pub type BVH;
         pub fn new_bvh() -> UniquePtr<BVH>;
         pub unsafe fn Build(self: Pin<&mut BVH>, vertices: *const bvhvec4, prim_count: u32);
         pub fn Compact(self: Pin<&mut BVH>);

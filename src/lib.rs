@@ -9,6 +9,11 @@ pub use layouts::*;
 pub use ray::*;
 pub use traversal::*;
 
+/// Infinite value used for intersection.
+///
+/// **NOTE**: This is not the same as `f32::MAX`.
+pub const INFINITE: f32 = 1e30; // Actual valid ieee range: 3.40282347E+38
+
 pub struct NodeId(pub u32);
 
 impl NodeId {
@@ -27,7 +32,7 @@ impl NodeId {
 
 #[cfg(test)]
 mod tests {
-    use crate::{BVHNode, Intersector, Node4, Ray, BVH, BVH4};
+    use crate::{BVHNode, Intersector, Node4, Ray, BVH, BVH4, INFINITE};
     use approx::assert_relative_eq;
 
     const CUBE_INDICES: [u16; 36] = [
@@ -170,7 +175,7 @@ mod tests {
 
         let mut ray: Ray = Ray::new([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]);
         assert_eq!(bvh4.intersect(&mut ray), 1);
-        assert_relative_eq!(ray.hit.t, f32::MAX);
+        assert_relative_eq!(ray.hit.t, INFINITE);
 
         let mut ray: Ray = Ray::new([-1.5, 0.5, 0.0], [0.0, 0.0, -1.0]);
         assert_eq!(bvh4.intersect(&mut ray), 2);

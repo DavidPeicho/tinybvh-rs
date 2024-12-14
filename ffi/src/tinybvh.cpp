@@ -3,6 +3,14 @@
 
 namespace tinybvh {
 
+/** Utils */
+
+Ray ray_new(const std::array<float, 3>& origin, const std::array<float, 3>& dir) {
+    bvhvec3 o{origin[0], origin[1], origin[2]};
+    bvhvec3 d{dir[0], dir[1], dir[2]};
+    return tinybvh::Ray{o, d};
+}
+
 /** Wald BVH */
 
 std::unique_ptr<BVH> new_bvh() { return std::make_unique<BVH>(); }
