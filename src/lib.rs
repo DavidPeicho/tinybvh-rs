@@ -1,5 +1,10 @@
+//! Rust wrapper for [tinybvh](https://github.com/jbikker/tinybvh).
+//!
+//! Provides BVH: construction and intersection library
+//! - Construction: Wald, BVH4, CWBVH
+//! - Intersection
+
 mod cxx_ffi;
-mod errors;
 mod layouts;
 mod ray;
 mod traversal;

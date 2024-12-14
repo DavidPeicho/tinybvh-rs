@@ -2,16 +2,28 @@ use std::{fmt::Debug, marker::PhantomData, slice::from_raw_parts};
 
 use crate::{ffi, NodeId};
 
+/// "Traditional" 32-bytes BVH node layout, as proposed by Ingo Wald.
+///
+/// Node layout used by [`BVH`].
+///
+/// For more information: [tinybvh](https://github.com/jbikker/tinybvh).
 #[repr(C)]
 #[derive(Clone, Copy, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct BVHNode {
+    /// AABB min value.
     pub min: [f32; 3],
+    /// If the node is a leaf, this is the start index of the primitive.
+    /// Otherwise, this is the start index of the first child node.
     pub left_first: u32,
+    /// AABB max value.
     pub max: [f32; 3],
+    /// If the node is a leaf, number of triangles in the node.
+    /// `0` otherwise.
     pub tri_count: u32,
 }
 
 impl BVHNode {
+    /// Returns `true` if the node is a leaf.
     pub fn is_leaf(&self) -> bool {
         self.tri_count > 0
     }
@@ -28,6 +40,24 @@ impl Debug for BVHNode {
     }
 }
 
+/// BVH with layout [`BVHNode`].
+///
+/// This BVH is used to directly or indirectly build any other
+/// BVH layout.
+///
+/// # Examples
+///
+/// ```
+/// use tinybvh_rs::BVH;
+///
+/// let triangles = vec![
+///     [-1.0, 1.0, 0.0, 0.0],
+///     [1.0, 1.0, 0.0, 0.0],
+///     [-1.0, 0.0, 0.0, 0.0]
+/// ];
+/// let bvh = BVH::new(&triangles);
+/// println!("{:?}", bvh.node_count());
+/// ```
 pub struct BVH<'a> {
     pub(crate) inner: cxx::UniquePtr<ffi::BVH>,
     _phantom: PhantomData<&'a [f32; 4]>,
