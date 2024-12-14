@@ -1,11 +1,15 @@
 #ifndef TINYBVH_RUST
 #define TINYBVH_RUST
 
+#include <array>
 #include <memory>
 
 #include "tinybvh-rs/ffi/tinybvh/tiny_bvh.h"
 
 namespace tinybvh {
+
+/* Math */
+Ray ray_new(const std::array<float, 3>& origin, const std::array<float, 3>& dir);
 
 /* BVH Wald 32 */
 

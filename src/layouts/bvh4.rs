@@ -1,10 +1,9 @@
-use std::{fmt::Debug, marker::PhantomData, pin::Pin, slice::from_raw_parts};
+use std::{fmt::Debug, marker::PhantomData, slice::from_raw_parts};
 
 use crate::{ffi, Intersector, Ray, BVH};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
-// 4-wide (aka 'shallow') node
 pub struct Node4 {
     pub min: [f32; 3],
     pub first_tri: u32,
@@ -21,6 +20,9 @@ impl Node4 {
     }
 }
 
+/// BVH
+///
+///
 pub struct BVH4<'a> {
     inner: cxx::UniquePtr<ffi::BVH4>,
     _phantom: PhantomData<&'a [f32; 4]>,

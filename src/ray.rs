@@ -1,72 +1,65 @@
 use core::f32;
 
+use crate::ffi;
+
+/// Intersection data.
+///
+/// Contains intersection distance, as well as barycentric coordinates.
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Intersection {
+    /// Intersection distance. [`crate::INFINITE`] when empty.
     pub t: f32,
+    /// Barycentric weight along the first edge.
     pub u: f32,
+    /// Barycentric weight along the second edge.
     pub v: f32,
+    /// Primitive index.
     pub prim: u32,
 }
 
 impl Intersection {
+    /// Create a new intersection.
+    ///
+    /// The intersection distance defaults to[`crate::INFINITE`] with empty
+    /// barycentric coordinates, and primitive.
     pub fn new() -> Self {
         Self {
-            t: f32::MAX,
+            t: crate::INFINITE,
             ..Default::default()
         }
     }
 }
 
+/// Ray data.
+///
+/// Origin, distance, and [`Intersection`].
+///
+/// # Notes
+///
+/// Padding is unused and required for optimal alignment and performance.
 #[repr(C, align(16))]
 #[derive(Clone, Copy, Debug, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Ray {
+    /// Ray origin
     pub origin: [f32; 3],
     pub padding_0: u32,
+    /// Ray direction
     pub dir: [f32; 3],
     pub padding_1: u32,
+    /// Ray inverse direction.
+    /// Automatically computed when using [`Ray::new`].
     pub r_d: [f32; 3],
     pub padding_2: u32,
+    /// Ray intersection data.
     pub hit: Intersection,
 }
 
 impl Ray {
+    /// Createa new ray.
+    ///
+    /// Automatically computes [`Ray::r_d`].
     pub fn new(origin: [f32; 3], dir: [f32; 3]) -> Self {
-        let mut ray = Self {
-            origin,
-            hit: Intersection::new(),
-            ..Default::default()
-        };
-        ray.set_direction(&dir);
-        ray
+        ffi::ray_new(&origin, &dir)
     }
-
-    pub fn set_direction(&mut self, dir: &[f32; 3]) {
-        self.dir = normalize(&dir);
-        self.r_d = [
-            safercp(self.dir[0]),
-            safercp(self.dir[1]),
-            safercp(self.dir[2]),
-        ];
-    }
-}
-
-fn safercp(x: f32) -> f32 {
-    if x > 1e-12 {
-        return 1.0 / x;
-    }
-    if x < -1e-12 {
-        return 1.0 / x;
-    }
-    f32::MAX
-}
-// Taken from tinybvh.
-// TODO: Better to directly construct the C++ struct via its constructor.
-fn length(a: &[f32; 3]) -> f32 {
-    (a[0] * a[0] + a[1] * a[1] + a[2] * a[2]).sqrt()
-}
-fn normalize(a: &[f32; 3]) -> [f32; 3] {
-    let l = length(a);
-    let rl = if l == 0.0 { 0.0 } else { 1.0 / l };
-    return [a[0] * rl, a[1] * rl, a[2] * rl];
 }
