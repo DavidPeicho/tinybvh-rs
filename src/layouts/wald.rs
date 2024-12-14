@@ -58,6 +58,11 @@ impl Debug for BVHNode {
 /// let bvh = BVH::new(&triangles);
 /// println!("{:?}", bvh.node_count());
 /// ```
+///
+/// /// # Notes
+///
+/// The lifetime bound is required by [tinybvh](https://github.com/jbikker/tinybvh), which
+/// holds to the triangles slice.
 pub struct BVH<'a> {
     pub(crate) inner: cxx::UniquePtr<ffi::BVH>,
     _phantom: PhantomData<&'a [f32; 4]>,
@@ -82,19 +87,29 @@ impl<'a> BVH<'a> {
         self.inner.pin_mut().Compact();
     }
 
-    /// Doesn't include the **root** node
+    /// Number of nodes in this BVH.
+    ///
+    /// # Notes
+    ///
+    /// - A traversal is required to compute the count
+    /// - Root node isn't included in the count
     pub fn node_count(&self) -> u32 {
         self.inner.NodeCount() as u32
     }
 
+    /// Number of primitives for a given node.
     pub fn primitive_count(&self, id: NodeId) -> u32 {
         self.inner.PrimCount(id.0) as u32
     }
 
+    /// SAH cost for a subtree.
     pub fn sah_cost(&self, id: NodeId) -> f32 {
         self.inner.SAHCost(id.0)
     }
 
+    /// BVH nodes.
+    ///
+    /// Useful to upload to the BVH to the GPU.
     pub fn nodes(&self) -> &[BVHNode] {
         // TODO: Make that safer with cxx
         let ptr = ffi::bvh_nodes(&self.inner) as *const BVHNode;

@@ -24,7 +24,6 @@ pub(crate) mod ffi {
         // Utils
         pub type bvhvec4;
         pub type Ray = crate::Ray;
-        pub type Intersection = crate::Intersection;
         pub fn ray_new(origin: &[f32; 3], dir: &[f32; 3]) -> Ray;
 
         // BVH
