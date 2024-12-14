@@ -4,6 +4,7 @@
 #include <array>
 #include <memory>
 
+#include "rust/cxx.h"
 #include "tinybvh-rs/ffi/tinybvh/tiny_bvh.h"
 
 namespace tinybvh {
@@ -15,15 +16,13 @@ Ray ray_new(const std::array<float, 3>& origin, const std::array<float, 3>& dir)
 
 using BVHNode = BVH::BVHNode;
 std::unique_ptr<BVH> new_bvh();
-const BVHNode* bvh_nodes(const BVH&);
-unsigned bvh_nodes_count(const BVH&);
+rust::Slice<const BVHNode> bvh_nodes(const BVH&);
 
 /* BVH4 */
 
 using BVHNode4 = BVH4::BVHNode;
 std::unique_ptr<BVH4> new_bvh4();
-const BVHNode4* bvh4_nodes(const BVH4&);
-unsigned bvh4_nodes_count(const BVH4&);
+rust::Slice<const BVHNode4> bvh4_nodes(const BVH4&);
 
 /* BVH8 */
 

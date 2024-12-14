@@ -1,4 +1,4 @@
-use std::{fmt::Debug, marker::PhantomData, slice::from_raw_parts};
+use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{ffi, NodeId};
 
@@ -8,8 +8,8 @@ use crate::{ffi, NodeId};
 ///
 /// For more information: [tinybvh](https://github.com/jbikker/tinybvh).
 #[repr(C)]
-#[derive(Clone, Copy, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct BVHNode {
+#[derive(Clone, Copy, Default, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct NodeWald {
     /// AABB min value.
     pub min: [f32; 3],
     /// If the node is a leaf, this is the start index of the primitive.
@@ -22,21 +22,10 @@ pub struct BVHNode {
     pub tri_count: u32,
 }
 
-impl BVHNode {
+impl NodeWald {
     /// Returns `true` if the node is a leaf.
     pub fn is_leaf(&self) -> bool {
         self.tri_count > 0
-    }
-}
-
-impl Debug for BVHNode {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("BVHNode")
-            .field("min", &self.min)
-            .field("left_first", &self.left_first)
-            .field("max", &self.max)
-            .field("tri_count", &self.tri_count)
-            .finish()
     }
 }
 
@@ -69,20 +58,28 @@ pub struct BVH<'a> {
 }
 
 impl<'a> BVH<'a> {
-    pub fn new(vertices: &'a [[f32; 4]]) -> Self {
-        let mut inner: cxx::UniquePtr<ffi::BVH> = ffi::new_bvh();
-        let primitive_count = vertices.len() as u32 / 3;
-        unsafe {
-            let ptr = vertices.as_ptr() as *const ffi::bvhvec4;
-            inner.pin_mut().Build(ptr, primitive_count);
-        }
-
+    pub fn new(primitives: &'a [[f32; 4]]) -> Self {
         BVH {
-            inner,
+            inner: ffi::new_bvh(),
             _phantom: Default::default(),
+        }
+        .update(primitives)
+    }
+
+    pub fn update(mut self, primitives: &'a [[f32; 4]]) -> Self {
+        let primitives = primitives.into();
+        self.inner.pin_mut().Build(&primitives);
+        // unsafe {
+        //     let ptr = primitives.as_ptr() as *const ffi::bvhvec4;
+        //     self.inner.pin_mut().Build(ptr, 2);
+        // }
+        Self {
+            inner: self.inner,
+            _phantom: PhantomData,
         }
     }
 
+    // Remove unused nodes and reduce the size of the BVH.
     pub fn compact(&mut self) {
         self.inner.pin_mut().Compact();
     }
@@ -110,10 +107,13 @@ impl<'a> BVH<'a> {
     /// BVH nodes.
     ///
     /// Useful to upload to the BVH to the GPU.
-    pub fn nodes(&self) -> &[BVHNode] {
-        // TODO: Make that safer with cxx
-        let ptr = ffi::bvh_nodes(&self.inner) as *const BVHNode;
-        let count = ffi::bvh_nodes_count(&self.inner);
-        unsafe { from_raw_parts(ptr, count as usize) }
+    pub fn nodes(&self) -> &[NodeWald] {
+        ffi::bvh_nodes(&self.inner)
+    }
+}
+
+impl crate::Intersector for BVH<'_> {
+    fn intersect(&self, ray: &mut crate::Ray) -> u32 {
+        self.inner.Intersect(ray) as u32
     }
 }

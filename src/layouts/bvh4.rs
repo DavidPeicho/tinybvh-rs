@@ -1,6 +1,6 @@
-use std::{fmt::Debug, marker::PhantomData, slice::from_raw_parts};
+use std::{fmt::Debug, marker::PhantomData};
 
-use crate::{ffi, Intersector, Ray, BVH};
+use crate::{ffi, Intersector, Ray};
 
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
@@ -21,25 +21,23 @@ impl Node4 {
 }
 
 /// BVH
-///
-///
 pub struct BVH4<'a> {
     inner: cxx::UniquePtr<ffi::BVH4>,
     _phantom: PhantomData<&'a [f32; 4]>,
 }
 
 impl<'a> BVH4<'a> {
-    pub fn new(bvh: &BVH) -> Self {
-        let mut inner: cxx::UniquePtr<ffi::BVH4> = ffi::new_bvh4();
-        inner.pin_mut().ConvertFrom(&bvh.inner);
+    pub fn new(primitives: &'a [[f32; 4]]) -> Self {
         Self {
-            inner,
+            inner: ffi::new_bvh4(),
             _phantom: PhantomData,
         }
+        .update(primitives)
     }
 
-    pub fn update(mut self, bvh: BVH<'a>) -> Self {
-        self.inner.pin_mut().ConvertFrom(&bvh.inner);
+    pub fn update(mut self, primitives: &'a [[f32; 4]]) -> Self {
+        let primitives = primitives.into();
+        self.inner.pin_mut().Build(&primitives);
         Self {
             inner: self.inner,
             _phantom: PhantomData,
@@ -47,10 +45,7 @@ impl<'a> BVH4<'a> {
     }
 
     pub fn nodes(&self) -> &[Node4] {
-        // TODO: Make that safer with cxx
-        let ptr = ffi::bvh4_nodes(&self.inner) as *const Node4;
-        let count = ffi::bvh4_nodes_count(&self.inner);
-        unsafe { from_raw_parts(ptr, count as usize) }
+        ffi::bvh4_nodes(&self.inner)
     }
 }
 
