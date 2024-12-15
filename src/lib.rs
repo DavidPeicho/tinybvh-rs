@@ -57,15 +57,3 @@ pub use traversal::*;
 ///
 /// **NOTE**: This is not the same as `f32::MAX`.
 pub const INFINITE: f32 = 1e30; // Actual valid ieee range: 3.40282347E+38
-
-pub struct NodeId(pub u32);
-
-impl NodeId {
-    pub fn root() -> Self {
-        Self(0)
-    }
-
-    pub fn new(id: u32) -> Self {
-        Self(id)
-    }
-}

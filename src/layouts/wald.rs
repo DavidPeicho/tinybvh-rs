@@ -1,4 +1,4 @@
-use crate::{ffi, NodeId};
+use crate::ffi;
 use std::{fmt::Debug, marker::PhantomData};
 
 /// "Traditional" 32-bytes BVH node layout, as proposed by Ingo Wald.
@@ -60,13 +60,13 @@ impl<'a> BVH<'a> {
     }
 
     /// Number of primitives for a given node.
-    pub fn primitive_count(&self, id: NodeId) -> u32 {
-        self.inner.PrimCount(id.0) as u32
+    pub fn primitive_count(&self, id: u32) -> u32 {
+        self.inner.PrimCount(id) as u32
     }
 
     /// SAH cost for a subtree.
-    pub fn sah_cost(&self, id: NodeId) -> f32 {
-        self.inner.SAHCost(id.0)
+    pub fn sah_cost(&self, id: u32) -> f32 {
+        self.inner.SAHCost(id)
     }
 
     /// BVH nodes.
