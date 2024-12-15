@@ -57,6 +57,7 @@ mod tests {
         ];
         assert_eq!(bvh.nodes().len(), expected.len());
         assert_eq!(bvh.nodes(), expected);
+        assert_eq!(bvh.indices(), [0, 1]);
         test_intersection(&bvh);
         bvh.compact();
     }
@@ -64,11 +65,11 @@ mod tests {
     #[test]
     fn layout_bvh4() {
         let triangles = split_triangles();
-        let bvh4 = BVH4::new(&triangles);
-
+        let bvh = BVH4::new(&triangles);
         // Not checking for full layout, since the number of nodes vary
         // per platform
-        test_intersection(&bvh4);
+        assert_eq!(bvh.indices(), [0, 1]);
+        test_intersection(&bvh);
     }
 
     #[test]

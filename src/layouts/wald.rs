@@ -75,5 +75,26 @@ impl<'a> BVH<'a> {
     pub fn nodes(&self) -> &[NodeWald] {
         ffi::bvh_nodes(&self.inner)
     }
+
+    /// BVH indices.
+    ///
+    /// Map from primitive index to first vertex index.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// for i in 0..node.tri_count {
+    ///     let vertex_start = bvh.indices()[node.left_first + i] * 3;
+    ///     let vertex = [
+    ///         primitives[vertex_start],
+    ///         primitives[vertex_start + 1],
+    ///         primitives[vertex_start + 2]
+    ///     ];
+    ///     println!("Vertex {:?}", vertex);
+    /// }
+    /// ```
+    pub fn indices(&self) -> &[u32] {
+        ffi::bvh_indices(&self.inner)
+    }
 }
 super::impl_bvh!(BVH, BVH);
