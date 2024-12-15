@@ -33,6 +33,8 @@ macro_rules! impl_bvh_layout {
             /// For complex BVH types, this can result in multiple builds:
             /// - [`crate::BVH4`]: Requires building a [`crate::BVH`] first
             pub fn build(mut self, primitives: &'a [[f32; 4]]) -> Self {
+                // TODO: Return `Result` for non triangles list
+
                 let primitives = primitives.into();
                 self.inner.pin_mut().Build(&primitives);
                 Self {

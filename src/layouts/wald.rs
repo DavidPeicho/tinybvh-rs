@@ -7,17 +7,15 @@ use super::impl_bvh_layout;
 /// "Traditional" 32-bytes BVH node layout, as proposed by Ingo Wald.
 ///
 /// Node layout used by [`BVH`].
-///
-/// For more information: [tinybvh](https://github.com/jbikker/tinybvh).
 #[repr(C)]
 #[derive(Clone, Copy, Default, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct NodeWald {
-    /// AABB min value.
+    /// AABB min position.
     pub min: [f32; 3],
     /// If the node is a leaf, this is the start index of the primitive.
     /// Otherwise, this is the start index of the first child node.
     pub left_first: u32,
-    /// AABB max value.
+    /// AABB max position.
     pub max: [f32; 3],
     /// If the node is a leaf, number of triangles in the node.
     /// `0` otherwise.
@@ -33,9 +31,6 @@ impl NodeWald {
 
 /// BVH with layout [`BVHNode`].
 ///
-/// This BVH is used to directly or indirectly build any other
-/// BVH layout.
-///
 /// # Examples
 ///
 /// ```
@@ -47,13 +42,7 @@ impl NodeWald {
 ///     [-1.0, 0.0, 0.0, 0.0]
 /// ];
 /// let bvh = BVH::new(&triangles);
-/// println!("{:?}", bvh.node_count());
 /// ```
-///
-/// /// # Notes
-///
-/// The lifetime bound is required by [tinybvh](https://github.com/jbikker/tinybvh), which
-/// holds to the triangles slice.
 pub struct BVH<'a> {
     inner: cxx::UniquePtr<ffi::BVH>,
     _phantom: PhantomData<&'a [f32; 4]>,
@@ -73,16 +62,6 @@ impl<'a> BVH<'a> {
         self.inner.pin_mut().Compact();
     }
 
-    /// Number of nodes in this BVH, **excluding** the root.
-    ///
-    /// # Notes
-    ///
-    /// - A traversal is required to compute the count
-    /// - Root node isn't included in the count
-    pub fn node_count(&self) -> u32 {
-        self.inner.NodeCount() as u32
-    }
-
     /// Number of primitives for a given node.
     pub fn primitive_count(&self, id: NodeId) -> u32 {
         self.inner.PrimCount(id.0) as u32
@@ -100,7 +79,6 @@ impl<'a> BVH<'a> {
         ffi::bvh_nodes(&self.inner)
     }
 }
-
 impl_bvh_layout!(BVH);
 
 impl crate::Intersector for BVH<'_> {

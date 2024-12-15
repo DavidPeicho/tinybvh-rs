@@ -21,14 +21,8 @@ rust::Slice<const BVHNode> bvh_nodes(const BVH& bvh) {
 /** BVH4 */
 
 std::unique_ptr<BVH4> new_bvh4() { return std::make_unique<BVH4>(); }
-rust::Slice<const BVH4::BVHNode> bvh_nodes(const BVH4& bvh) {
+rust::Slice<const BVH4::BVHNode> bvh4_nodes(const BVH4& bvh) {
     return rust::Slice{const_cast<const BVH4::BVHNode*>(bvh.bvh4Node), bvh.usedNodes};
 }
-
-/** BVH8 */
-
-std::unique_ptr<BVH8> new_bvh8() { return std::make_unique<BVH8>(); }
-const BVH8::BVHNode* bvh_nodes(const BVH8& bvh) { return bvh.bvh8Node; }
-unsigned bvh8_nodes_count(const BVH8& bvh) { return bvh.usedNodes; }
 
 }
