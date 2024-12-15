@@ -26,7 +26,7 @@ impl NodeWald {
     }
 }
 
-/// BVH with layout [`BVHNode`].
+/// BVH with node layout [`NodeWald`].
 ///
 /// # Examples
 ///
