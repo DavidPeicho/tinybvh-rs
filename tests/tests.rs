@@ -66,22 +66,8 @@ mod tests {
         let triangles = split_triangles();
         let bvh4 = BVH4::new(&triangles);
 
-        if !cfg!(unix) {
-            // TODO: It looks like the number of nodes is different on Linux
-            // in tinybvh
-            let expected = [
-                Node4 {
-                    min: [-2.0, 0.0, -1.0],
-                    max: [2.0, 1.0, -1.0],
-                    tri_count: 2,
-                    ..Default::default()
-                },
-                Node4::default(),
-            ];
-            assert_eq!(bvh4.nodes().len(), expected.len());
-            assert_eq!(bvh4.nodes(), expected);
-        }
-
+        // Not checking for full layout, since the number of nodes vary
+        // per platform
         test_intersection(&bvh4);
     }
 
