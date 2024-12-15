@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod tests {
+    use std::primitive;
+
     use approx::assert_relative_eq;
     use tinybvh_rs::*;
 
@@ -75,8 +77,8 @@ mod tests {
     #[test]
     fn layout_cwbvh() {
         let primitives = split_triangles();
-        let bvh = BVH4::new(&primitives);
-        test_intersection(&bvh);
+        let bvh = CWBVH::new(&primitives);
+        println!("{:?}", bvh.primitives());
     }
 
     #[test]

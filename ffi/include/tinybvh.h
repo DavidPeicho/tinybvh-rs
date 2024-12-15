@@ -33,7 +33,8 @@ struct NodeCWBVH; // TODO: Remove once tinybvh provides a struct for CWBVH node.
 std::unique_ptr<BVH8_CWBVH> cwbvh_new();
 const uint8_t* cwbvh_nodes(const BVH8_CWBVH&);
 uint32_t cwbvh_nodes_count(const BVH8_CWBVH&);
-rust::Slice<const uint32_t> cwbvh_indices(const BVH8_CWBVH&);
+const uint8_t* cwbvh_primitives(const BVH8_CWBVH&);
+uint32_t cwbvh_primitives_count(const BVH8_CWBVH&);
 
 }
 

@@ -78,6 +78,8 @@ pub(crate) mod ffi {
         pub fn cwbvh_new() -> UniquePtr<BVH8_CWBVH>;
         pub fn cwbvh_nodes(bvh: &BVH8_CWBVH) -> *const u8;
         pub fn cwbvh_nodes_count(bvh: &BVH8_CWBVH) -> u32;
+        pub fn cwbvh_primitives(bvh: &BVH8_CWBVH) -> *const u8;
+        pub fn cwbvh_primitives_count(bvh: &BVH8_CWBVH) -> u32;
         pub fn Build(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
         pub fn Intersect(self: &BVH8_CWBVH, original: &mut Ray) -> i32;
     }

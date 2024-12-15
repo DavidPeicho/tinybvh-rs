@@ -36,5 +36,7 @@ rust::Slice<const uint32_t> bvh4_indices(const BVH4& bvh) {
 std::unique_ptr<BVH8_CWBVH> cwbvh_new() { return std::make_unique<BVH8_CWBVH>(); }
 const uint8_t* cwbvh_nodes(const BVH8_CWBVH& bvh) { return reinterpret_cast<const uint8_t*>(bvh.bvh8Data); }
 uint32_t cwbvh_nodes_count(const BVH8_CWBVH& bvh) { return bvh.usedBlocks; }
+const uint8_t* cwbvh_primitives(const BVH8_CWBVH& bvh) { return reinterpret_cast<const uint8_t*>(bvh.bvh8Tris); }
+uint32_t cwbvh_primitives_count(const BVH8_CWBVH& bvh) { return bvh.idxCount; }
 
 }
