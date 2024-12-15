@@ -1,4 +1,4 @@
-name: Cargo Build & Test
+name: tinybv-rs
 
 on:
   pull_request:
@@ -9,7 +9,10 @@ env:
 jobs:
   build_and_test:
     name: Build and Test
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        platform: [macos-latest, windows-latest, ubuntu-latest]
+    runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v4
         with:
