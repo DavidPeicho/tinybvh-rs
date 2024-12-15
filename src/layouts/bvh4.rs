@@ -1,8 +1,5 @@
+use crate::ffi;
 use std::{fmt::Debug, marker::PhantomData};
-
-use crate::{ffi, Intersector, Ray};
-
-use super::impl_bvh_layout;
 
 /// 4-wide (A.K.A 'shallow') BVH layout.
 ///
@@ -62,10 +59,4 @@ impl<'a> BVH4<'a> {
         ffi::bvh4_nodes(&self.inner)
     }
 }
-impl_bvh_layout!(BVH4);
-
-impl Intersector for BVH4<'_> {
-    fn intersect(&self, ray: &mut Ray) -> u32 {
-        self.inner.Intersect(ray) as u32
-    }
-}
+super::impl_bvh!(BVH4, BVH4);

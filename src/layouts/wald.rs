@@ -1,8 +1,5 @@
-use std::{fmt::Debug, marker::PhantomData};
-
 use crate::{ffi, NodeId};
-
-use super::impl_bvh_layout;
+use std::{fmt::Debug, marker::PhantomData};
 
 /// "Traditional" 32-bytes BVH node layout, as proposed by Ingo Wald.
 ///
@@ -79,10 +76,4 @@ impl<'a> BVH<'a> {
         ffi::bvh_nodes(&self.inner)
     }
 }
-impl_bvh_layout!(BVH);
-
-impl crate::Intersector for BVH<'_> {
-    fn intersect(&self, ray: &mut crate::Ray) -> u32 {
-        self.inner.Intersect(ray) as u32
-    }
-}
+super::impl_bvh!(BVH, BVH);

@@ -1,6 +1,8 @@
 mod bvh4;
+mod cwbvh;
 mod wald;
 pub use bvh4::*;
+pub use cwbvh::*;
 pub use wald::*;
 
 /// Holds BVH data without lifetfime bound.
@@ -14,11 +16,11 @@ pub struct Capture<T> {
 ///
 /// - Temporarily move the BVH to edit the triangles
 /// - `update()`
-macro_rules! impl_bvh_layout {
-    ($name: ident) => {
+macro_rules! impl_bvh {
+    ($name: ident, $ffi_name: ident) => {
         impl<'a> $name<'a> {
             pub fn from_capture(
-                capture: crate::Capture<cxx::UniquePtr<ffi::$name>>,
+                capture: crate::Capture<cxx::UniquePtr<ffi::$ffi_name>>,
                 primitives: &'a [[f32; 4]],
             ) -> Self {
                 Self {
@@ -63,10 +65,16 @@ macro_rules! impl_bvh_layout {
             /// triangles[0][0] = -10.0;
             /// let bvh = BVH::from_capture(capture, &triangles);
             /// ```
-            pub fn capture(self) -> crate::Capture<cxx::UniquePtr<ffi::$name>> {
+            pub fn capture(self) -> crate::Capture<cxx::UniquePtr<ffi::$ffi_name>> {
                 crate::Capture { inner: self.inner }
+            }
+        }
+
+        impl crate::Intersector for $name<'_> {
+            fn intersect(&self, ray: &mut crate::Ray) -> u32 {
+                self.inner.Intersect(ray) as u32
             }
         }
     };
 }
-pub(super) use impl_bvh_layout;
+pub(super) use impl_bvh;

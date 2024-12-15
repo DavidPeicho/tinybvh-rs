@@ -25,4 +25,10 @@ rust::Slice<const BVH4::BVHNode> bvh4_nodes(const BVH4& bvh) {
     return rust::Slice{const_cast<const BVH4::BVHNode*>(bvh.bvh4Node), bvh.usedNodes};
 }
 
+/** CWBVH */
+
+std::unique_ptr<BVH8_CWBVH> cwbvh_new() { return std::make_unique<BVH8_CWBVH>(); }
+const uint8_t* cwbvh_nodes(const BVH8_CWBVH& bvh) { return reinterpret_cast<const uint8_t*>(bvh.bvh8Data); }
+uint32_t cwbvh_nodes_count(const BVH8_CWBVH& bvh) { return bvh.usedBlocks; }
+
 }

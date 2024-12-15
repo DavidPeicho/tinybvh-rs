@@ -24,6 +24,14 @@ using BVHNode4 = BVH4::BVHNode;
 std::unique_ptr<BVH4> new_bvh4();
 rust::Slice<const BVHNode4> bvh4_nodes(const BVH4&);
 
+/* CWBVH */
+
+struct NodeCWBVH; // TODO: Remove once tinybvh provides a struct for CWBVH node.
+
+std::unique_ptr<BVH8_CWBVH> cwbvh_new();
+const uint8_t* cwbvh_nodes(const BVH8_CWBVH&);
+uint32_t cwbvh_nodes_count(const BVH8_CWBVH&);
+
 }
 
 #endif

@@ -82,6 +82,13 @@ mod tests {
     }
 
     #[test]
+    fn layout_cwbvh() {
+        let primitives = split_triangles();
+        let bvh = BVH4::new(&primitives);
+        test_intersection(&bvh);
+    }
+
+    #[test]
     fn capture() {
         let mut triangles = split_triangles();
         let bvh = BVH::new(&triangles);

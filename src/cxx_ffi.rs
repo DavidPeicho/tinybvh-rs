@@ -58,7 +58,6 @@ pub(crate) mod ffi {
         pub fn new_bvh() -> UniquePtr<BVH>;
         pub fn Build(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn Compact(self: Pin<&mut BVH>);
-        pub fn NodeCount(self: &BVH) -> i32;
         pub fn SAHCost(self: &BVH, node_idx: u32) -> f32;
         pub fn PrimCount(self: &BVH, node_idx: u32) -> i32;
         pub fn bvh_nodes(bvh: &BVH) -> &[BVHNode];
@@ -71,5 +70,13 @@ pub(crate) mod ffi {
         pub fn Build(self: Pin<&mut BVH4>, primitives: &bvhvec4slice);
         pub fn bvh4_nodes(bvh: &BVH4) -> &[BVHNode4];
         pub fn Intersect(self: &BVH4, original: &mut Ray) -> i32;
+
+        // CWBVH
+        pub type BVH8_CWBVH;
+        pub fn cwbvh_new() -> UniquePtr<BVH8_CWBVH>;
+        pub fn cwbvh_nodes(bvh: &BVH8_CWBVH) -> *const u8;
+        pub fn cwbvh_nodes_count(bvh: &BVH8_CWBVH) -> u32;
+        pub fn Build(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
+        pub fn Intersect(self: &BVH8_CWBVH, original: &mut Ray) -> i32;
     }
 }
