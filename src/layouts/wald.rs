@@ -2,6 +2,8 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{ffi, NodeId};
 
+use super::impl_bvh_layout;
+
 /// "Traditional" 32-bytes BVH node layout, as proposed by Ingo Wald.
 ///
 /// Node layout used by [`BVH`].
@@ -53,7 +55,7 @@ impl NodeWald {
 /// The lifetime bound is required by [tinybvh](https://github.com/jbikker/tinybvh), which
 /// holds to the triangles slice.
 pub struct BVH<'a> {
-    pub(crate) inner: cxx::UniquePtr<ffi::BVH>,
+    inner: cxx::UniquePtr<ffi::BVH>,
     _phantom: PhantomData<&'a [f32; 4]>,
 }
 
@@ -63,20 +65,7 @@ impl<'a> BVH<'a> {
             inner: ffi::new_bvh(),
             _phantom: Default::default(),
         }
-        .update(primitives)
-    }
-
-    pub fn update(mut self, primitives: &'a [[f32; 4]]) -> Self {
-        let primitives = primitives.into();
-        self.inner.pin_mut().Build(&primitives);
-        // unsafe {
-        //     let ptr = primitives.as_ptr() as *const ffi::bvhvec4;
-        //     self.inner.pin_mut().Build(ptr, 2);
-        // }
-        Self {
-            inner: self.inner,
-            _phantom: PhantomData,
-        }
+        .build(primitives)
     }
 
     // Remove unused nodes and reduce the size of the BVH.
@@ -84,7 +73,7 @@ impl<'a> BVH<'a> {
         self.inner.pin_mut().Compact();
     }
 
-    /// Number of nodes in this BVH.
+    /// Number of nodes in this BVH, **excluding** the root.
     ///
     /// # Notes
     ///
@@ -111,6 +100,8 @@ impl<'a> BVH<'a> {
         ffi::bvh_nodes(&self.inner)
     }
 }
+
+impl_bvh_layout!(BVH);
 
 impl crate::Intersector for BVH<'_> {
     fn intersect(&self, ray: &mut crate::Ray) -> u32 {

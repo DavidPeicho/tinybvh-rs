@@ -65,6 +65,18 @@ mod tests {
         bvh.compact();
     }
 
+    #[test]
+    fn capture() {
+        let mut triangles = split_triangles();
+        let bvh = BVH::new(&triangles);
+        assert_relative_eq!(bvh.nodes()[0].min[0], -2.0);
+
+        let capture = bvh.capture();
+        triangles[0][0] = -5.0;
+        let bvh: BVH<'_> = BVH::from_capture(capture, &triangles);
+        assert_relative_eq!(bvh.nodes()[0].min[0], -5.0);
+    }
+
     // TODO: Bug in tinybvh
     // #[test]
     // fn layout_bvh4() {
