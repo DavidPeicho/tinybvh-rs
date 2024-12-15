@@ -2,6 +2,8 @@ use std::{fmt::Debug, marker::PhantomData};
 
 use crate::{ffi, Intersector, Ray};
 
+use super::impl_bvh_layout;
+
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Node4 {
@@ -32,22 +34,15 @@ impl<'a> BVH4<'a> {
             inner: ffi::new_bvh4(),
             _phantom: PhantomData,
         }
-        .update(primitives)
-    }
-
-    pub fn update(mut self, primitives: &'a [[f32; 4]]) -> Self {
-        let primitives = primitives.into();
-        self.inner.pin_mut().Build(&primitives);
-        Self {
-            inner: self.inner,
-            _phantom: PhantomData,
-        }
+        .build(primitives)
     }
 
     pub fn nodes(&self) -> &[Node4] {
         ffi::bvh4_nodes(&self.inner)
     }
 }
+
+impl_bvh_layout!(BVH4);
 
 impl Intersector for BVH4<'_> {
     fn intersect(&self, ray: &mut Ray) -> u32 {
