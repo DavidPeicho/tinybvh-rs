@@ -27,7 +27,7 @@ impl Node4 {
     }
 }
 
-/// BVH4 with layout [`Node4`].
+/// BVH4 with node layout [`Node4`].
 ///
 /// # Examples
 ///
@@ -41,12 +41,18 @@ impl Node4 {
 /// ];
 /// let bvh = BVH4::new(&triangles);
 /// ```
+///
+/// # Notes
+///
+/// This layout relies on another layout, building it implicitly:
+/// - Build a [`crate::BVH`]
 pub struct BVH4<'a> {
     inner: cxx::UniquePtr<ffi::BVH4>,
     _phantom: PhantomData<&'a [f32; 4]>,
 }
 
 impl<'a> BVH4<'a> {
+    /// Create a new BVH4.
     pub fn new(primitives: &'a [[f32; 4]]) -> Self {
         Self {
             inner: ffi::new_bvh4(),
@@ -55,6 +61,7 @@ impl<'a> BVH4<'a> {
         .build(primitives)
     }
 
+    /// Node hierarchy.
     pub fn nodes(&self) -> &[Node4] {
         ffi::bvh4_nodes(&self.inner)
     }

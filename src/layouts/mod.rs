@@ -19,6 +19,10 @@ pub struct Capture<T> {
 macro_rules! impl_bvh {
     ($name: ident, $ffi_name: ident) => {
         impl<'a> $name<'a> {
+            /// Create the BVH from a capture.
+            ///
+            /// At the opposite of [`$name:new`], this method might not re-allocate
+            /// the BVH data, and instead re-use the captured ones.
             pub fn from_capture(
                 capture: crate::Capture<cxx::UniquePtr<ffi::$ffi_name>>,
                 primitives: &'a [[f32; 4]],
@@ -32,8 +36,7 @@ macro_rules! impl_bvh {
 
             /// Build the BVH layout.
             ///
-            /// For complex BVH types, this can result in multiple builds:
-            /// - [`crate::BVH4`]: Requires building a [`crate::BVH`] first
+            /// For complex BVH types, this can result in multiple builds.
             pub fn build(mut self, primitives: &'a [[f32; 4]]) -> Self {
                 // TODO: Return `Result` for non triangles list
 
