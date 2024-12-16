@@ -157,8 +157,4 @@ mod tests {
         let bvh: BVH<'_> = BVH::from_capture(capture, &triangles);
         assert_relative_eq!(bvh.nodes()[0].min[0], -5.0);
     }
-
-    #[cfg(feature = "strided")]
-    #[test]
-    fn strided() {}
 }
