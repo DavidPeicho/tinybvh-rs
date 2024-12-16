@@ -72,12 +72,6 @@ macro_rules! impl_bvh {
                 crate::Capture { inner: self.inner }
             }
         }
-
-        impl crate::Intersector for $name<'_> {
-            fn intersect(&self, ray: &mut crate::Ray) -> u32 {
-                self.inner.Intersect(ray) as u32
-            }
-        }
     };
 }
 pub(super) use impl_bvh;

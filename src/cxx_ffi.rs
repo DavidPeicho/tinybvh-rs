@@ -56,19 +56,21 @@ pub(crate) mod ffi {
         pub type BVH;
         pub type BVHNode = crate::NodeWald;
         pub fn new_bvh() -> UniquePtr<BVH>;
+        pub fn bvh_nodes(bvh: &BVH) -> &[BVHNode];
+        pub fn bvh_indices(bvh: &BVH) -> &[u32];
         pub fn Build(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn Compact(self: Pin<&mut BVH>);
         pub fn SAHCost(self: &BVH, node_idx: u32) -> f32;
         pub fn PrimCount(self: &BVH, node_idx: u32) -> i32;
-        pub fn bvh_nodes(bvh: &BVH) -> &[BVHNode];
         pub fn Intersect(self: &BVH, original: &mut Ray) -> i32;
 
         // BVH4
         pub type BVH4;
         pub type BVHNode4 = crate::Node4;
         pub fn new_bvh4() -> UniquePtr<BVH4>;
-        pub fn Build(self: Pin<&mut BVH4>, primitives: &bvhvec4slice);
         pub fn bvh4_nodes(bvh: &BVH4) -> &[BVHNode4];
+        pub fn bvh4_indices(bvh: &BVH4) -> &[u32];
+        pub fn Build(self: Pin<&mut BVH4>, primitives: &bvhvec4slice);
         pub fn Intersect(self: &BVH4, original: &mut Ray) -> i32;
 
         // CWBVH
@@ -76,6 +78,8 @@ pub(crate) mod ffi {
         pub fn cwbvh_new() -> UniquePtr<BVH8_CWBVH>;
         pub fn cwbvh_nodes(bvh: &BVH8_CWBVH) -> *const u8;
         pub fn cwbvh_nodes_count(bvh: &BVH8_CWBVH) -> u32;
+        pub fn cwbvh_primitives(bvh: &BVH8_CWBVH) -> *const u8;
+        pub fn cwbvh_primitives_count(bvh: &BVH8_CWBVH) -> u32;
         pub fn Build(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
         pub fn Intersect(self: &BVH8_CWBVH, original: &mut Ray) -> i32;
     }

@@ -65,5 +65,32 @@ impl<'a> BVH4<'a> {
     pub fn nodes(&self) -> &[Node4] {
         ffi::bvh4_nodes(&self.inner)
     }
+
+    /// BVH indices.
+    ///
+    /// Map from primitive index to first vertex index.
+    ///
+    /// # Examples
+    ///
+    /// ```ignore
+    /// for i in 0..node.tri_count {
+    ///     let vertex_start = bvh.indices()[node.first_tri + i] * 3;
+    ///     let vertex = [
+    ///         primitives[vertex_start],
+    ///         primitives[vertex_start + 1],
+    ///         primitives[vertex_start + 2]
+    ///     ];
+    ///     println!("Vertex {:?}", vertex);
+    /// }
+    /// ```
+    pub fn indices(&self) -> &[u32] {
+        ffi::bvh4_indices(&self.inner)
+    }
 }
 super::impl_bvh!(BVH4, BVH4);
+
+impl crate::Intersector for BVH4<'_> {
+    fn intersect(&self, ray: &mut crate::Ray) -> u32 {
+        self.inner.Intersect(ray) as u32
+    }
+}
