@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use std::primitive;
+    use core::f32;
 
     use approx::assert_relative_eq;
     use tinybvh_rs::*;
@@ -14,6 +14,28 @@ mod tests {
             [2.0, 0.0, -1.0, 0.0],
             [1.0, 0.0, -1.0, 0.0],
         ]
+    }
+
+    fn sphere() -> Vec<[f32; 4]> {
+        let radius = 10.0;
+        let width_segments = 32;
+        let height_segments = 16;
+        let phi_length = f32::consts::PI * 2.0;
+        let mut vertices = Vec::new();
+        for iy in 0..height_segments {
+            let v = iy as f32 / height_segments as f32;
+            for ix in 0..width_segments {
+                let u = ix as f32 / width_segments as f32;
+                let vertex: [f32; 4] = [
+                    -radius * f32::cos(u * phi_length) * f32::sin(v * f32::consts::PI),
+                    radius * f32::cos(v * f32::consts::PI),
+                    radius * f32::sin(u * phi_length) * f32::sin(v * f32::consts::PI),
+                    0.0 as f32,
+                ];
+                vertices.push(vertex);
+            }
+        }
+        vertices
     }
 
     fn test_intersection<B: Intersector>(bvh: &B) {
@@ -78,7 +100,25 @@ mod tests {
     fn layout_cwbvh() {
         let primitives = split_triangles();
         let bvh = CWBVH::new(&primitives);
-        println!("{:?}", bvh.primitives());
+        assert_eq!(
+            bvh.primitives(),
+            [
+                PrimitiveCWBVH {
+                    vertex_0: [-2.0, 1.0, -1.0],
+                    vertex_1: [-1.0, 1.0, -1.0],
+                    vertex_2: [-2.0, 0.0, -1.0],
+                    original_primitive: 0,
+                    ..Default::default()
+                },
+                PrimitiveCWBVH {
+                    vertex_0: [2.0, 1.0, -1.0],
+                    vertex_1: [2.0, 0.0, -1.0],
+                    vertex_2: [1.0, 0.0, -1.0],
+                    original_primitive: 1,
+                    ..Default::default()
+                }
+            ]
+        );
     }
 
     #[test]

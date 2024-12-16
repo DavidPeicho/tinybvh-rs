@@ -98,3 +98,9 @@ impl<'a> BVH<'a> {
     }
 }
 super::impl_bvh!(BVH, BVH);
+
+impl crate::Intersector for BVH<'_> {
+    fn intersect(&self, ray: &mut crate::Ray) -> u32 {
+        self.inner.Intersect(ray) as u32
+    }
+}

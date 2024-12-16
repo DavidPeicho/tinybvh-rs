@@ -1,5 +1,5 @@
 use crate::ffi;
-use std::{default, fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData};
 
 /// Format specified in:
 /// "Efficient Incoherent Ray Traversal on GPUs Through Compressed Wide BVHs", Ylitie et al. 2017.
@@ -48,9 +48,9 @@ pub struct PrimitiveCWBVH {
     pub vertex_0: [f32; 3],
     pub original_primitive: u32,
     pub vertex_1: [f32; 3],
-    padding_0: u32,
+    pub padding_0: u32,
     pub vertex_2: [f32; 3],
-    padding_1: u32,
+    pub padding_1: u32,
 }
 
 impl Debug for PrimitiveCWBVH {

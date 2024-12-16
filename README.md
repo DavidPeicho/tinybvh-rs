@@ -44,3 +44,9 @@ let mut ray = Ray::new([1.5, 0.45, 0.0], [0.0, 0.0, -1.0]);
 bvh.intersect(&mut ray);
 println!("Hit distance & primtive: {} / {}", ray.hit.t, ray.hit.prim); // 1.0 / 1
 ```
+
+## TODO
+
+* [ ] `build()` should return `Result`
+    * [ ] Check for node coutn in  CWBVH
+    * [ ] Check for primitives % 3
