@@ -47,9 +47,9 @@ pub struct BVH<'a> {
 
 impl<'a> BVH<'a> {
     pub fn new(primitives: &'a [[f32; 4]]) -> Self {
-        BVH {
-            inner: ffi::new_bvh(),
-            _phantom: Default::default(),
+        Self {
+            inner: ffi::BVH_new(),
+            _phantom: PhantomData,
         }
         .build(primitives)
     }
@@ -73,7 +73,7 @@ impl<'a> BVH<'a> {
     ///
     /// Useful to upload to the BVH to the GPU.
     pub fn nodes(&self) -> &[NodeWald] {
-        ffi::bvh_nodes(&self.inner)
+        ffi::BVH_nodes(&self.inner)
     }
 
     /// BVH indices.
@@ -94,7 +94,7 @@ impl<'a> BVH<'a> {
     /// }
     /// ```
     pub fn indices(&self) -> &[u32] {
-        ffi::bvh_indices(&self.inner)
+        ffi::BVH_indices(&self.inner)
     }
 }
 super::impl_bvh!(BVH, BVH);

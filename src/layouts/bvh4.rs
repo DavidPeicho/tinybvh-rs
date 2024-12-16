@@ -52,10 +52,9 @@ pub struct BVH4<'a> {
 }
 
 impl<'a> BVH4<'a> {
-    /// Create a new BVH4.
     pub fn new(primitives: &'a [[f32; 4]]) -> Self {
         Self {
-            inner: ffi::new_bvh4(),
+            inner: ffi::BVH4_new(),
             _phantom: PhantomData,
         }
         .build(primitives)
@@ -63,7 +62,7 @@ impl<'a> BVH4<'a> {
 
     /// Node hierarchy.
     pub fn nodes(&self) -> &[Node4] {
-        ffi::bvh4_nodes(&self.inner)
+        ffi::BVH4_nodes(&self.inner)
     }
 
     /// BVH indices.
@@ -84,7 +83,7 @@ impl<'a> BVH4<'a> {
     /// }
     /// ```
     pub fn indices(&self) -> &[u32] {
-        ffi::bvh4_indices(&self.inner)
+        ffi::BVH4_indices(&self.inner)
     }
 }
 super::impl_bvh!(BVH4, BVH4);

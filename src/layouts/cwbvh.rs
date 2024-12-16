@@ -73,7 +73,7 @@ pub struct CWBVH<'a> {
 impl<'a> CWBVH<'a> {
     pub fn new(primitives: &'a [[f32; 4]]) -> Self {
         Self {
-            inner: ffi::cwbvh_new(),
+            inner: ffi::CWBVH_new(),
             _phantom: PhantomData,
         }
         .build(primitives)
@@ -81,8 +81,8 @@ impl<'a> CWBVH<'a> {
 
     pub fn nodes(&self) -> &[NodeCWBVH] {
         // TODO: Create CWBVH node in tinybvh to avoid that.
-        let ptr = ffi::cwbvh_nodes(&self.inner) as *const NodeCWBVH;
-        let count = ffi::cwbvh_nodes_count(&self.inner);
+        let ptr = ffi::CWBVH_nodes(&self.inner) as *const NodeCWBVH;
+        let count = ffi::CWBVH_nodes_count(&self.inner);
         unsafe { std::slice::from_raw_parts(ptr, count as usize) }
     }
 
@@ -92,8 +92,8 @@ impl<'a> CWBVH<'a> {
     /// instead of the original list used during building.
     pub fn primitives(&self) -> &[PrimitiveCWBVH] {
         // TODO: Create struct in tinybvh to avoid that.
-        let ptr = ffi::cwbvh_primitives(&self.inner) as *const PrimitiveCWBVH;
-        let count = ffi::cwbvh_primitives_count(&self.inner);
+        let ptr = ffi::CWBVH_primitives(&self.inner) as *const PrimitiveCWBVH;
+        let count = ffi::CWBVH_primitives_count(&self.inner);
         unsafe { std::slice::from_raw_parts(ptr, count as usize) }
     }
 }

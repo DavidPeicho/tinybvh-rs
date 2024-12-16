@@ -84,6 +84,53 @@ mod tests {
         assert_eq!(bvh.indices(), [0, 1]);
         test_intersection(&bvh);
         bvh.compact();
+
+        #[cfg(feature = "strided")]
+        {
+            use pas::slice_attr;
+            let primitives = [
+                Vertex {
+                    position: [-2.0, 1.0, -1.0, 0.0],
+                    ..Default::default()
+                },
+                Vertex {
+                    position: [-1.0, 1.0, -1.0, 0.0],
+                    ..Default::default()
+                },
+                Vertex {
+                    position: [-2.0, 0.0, -1.0, 0.0],
+                    ..Default::default()
+                },
+                Vertex {
+                    position: [2.0, 1.0, -1.0, 0.0],
+                    ..Default::default()
+                },
+                Vertex {
+                    position: [2.0, 0.0, -1.0, 0.0],
+                    ..Default::default()
+                },
+                Vertex {
+                    position: [1.0, 0.0, -1.0, 0.0],
+                    ..Default::default()
+                },
+            ];
+            let positions = slice_attr!(primitives, [0].position);
+
+            bvh = bvh.build_strided(&positions);
+            assert_eq!(bvh.nodes().len(), expected.len());
+            assert_eq!(bvh.nodes(), expected);
+            assert_eq!(bvh.indices(), [0, 1]);
+            test_intersection(&bvh);
+        }
+    }
+
+    #[cfg(feature = "strided")]
+    #[repr(C)]
+    #[derive(Clone, Copy, Default, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
+    struct Vertex {
+        normal: [f32; 3],
+        position: [f32; 4],
+        uv: [f32; 2],
     }
 
     #[test]
@@ -132,4 +179,8 @@ mod tests {
         let bvh: BVH<'_> = BVH::from_capture(capture, &triangles);
         assert_relative_eq!(bvh.nodes()[0].min[0], -5.0);
     }
+
+    #[cfg(feature = "strided")]
+    #[test]
+    fn strided() {}
 }

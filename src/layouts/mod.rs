@@ -48,6 +48,16 @@ macro_rules! impl_bvh {
                 }
             }
 
+            #[cfg(feature = "strided")]
+            pub fn build_strided(mut self, primitives: &pas::Slice<[f32; 4]>) -> Self {
+                let primitives = primitives.into();
+                self.inner.pin_mut().Build(&primitives);
+                Self {
+                    inner: self.inner,
+                    _phantom: PhantomData,
+                }
+            }
+
             /// Temporarily move the BVH to loosen the primitives lifetime.
             ///
             /// Useful if editing the primitives is required, without re-allocating
