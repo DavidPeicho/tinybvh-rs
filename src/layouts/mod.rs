@@ -19,6 +19,24 @@ pub struct Capture<T> {
 macro_rules! impl_bvh {
     ($name: ident, $ffi_name: ident) => {
         impl<'a> $name<'a> {
+            /// Create a new BVH from positions.
+            ///
+            /// # Notes
+            ///
+            /// The `primitives` slice must contain 3 positions per primitive.
+            pub fn new(primitives: &'a [[f32; 4]]) -> Self {
+                Self::new_internal().build(primitives)
+            }
+
+            /// Create a new BVH from a strided slice of positions.
+            ///
+            /// # Notes
+            ///
+            /// The `primitives` slice must contain 3 positions per primitive.
+            pub fn new_strided(primitives: &pas::Slice<[f32; 4]>) -> Self {
+                Self::new_internal().build_strided(primitives)
+            }
+
             /// Create the BVH from a capture.
             ///
             /// At the opposite of [`$name:new`], this method might not re-allocate

@@ -93,8 +93,7 @@ mod tests {
                 },
             ];
             let positions = slice_attr!(primitives, [0].position);
-
-            bvh = bvh.build_strided(&positions);
+            let bvh = BVH::new_strided(&positions);
             assert_eq!(bvh.nodes().len(), expected.len());
             assert_eq!(bvh.nodes(), expected);
             assert_eq!(bvh.indices(), [0, 1]);

@@ -46,14 +46,6 @@ pub struct BVH<'a> {
 }
 
 impl<'a> BVH<'a> {
-    pub fn new(primitives: &'a [[f32; 4]]) -> Self {
-        Self {
-            inner: ffi::BVH_new(),
-            _phantom: PhantomData,
-        }
-        .build(primitives)
-    }
-
     // Remove unused nodes and reduce the size of the BVH.
     pub fn compact(&mut self) {
         self.inner.pin_mut().Compact();
@@ -95,6 +87,13 @@ impl<'a> BVH<'a> {
     /// ```
     pub fn indices(&self) -> &[u32] {
         ffi::BVH_indices(&self.inner)
+    }
+
+    pub fn new_internal() -> Self {
+        Self {
+            inner: ffi::BVH_new(),
+            _phantom: PhantomData,
+        }
     }
 }
 super::impl_bvh!(BVH, BVH);
