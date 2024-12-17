@@ -45,8 +45,36 @@ bvh.intersect(&mut ray);
 println!("Hit distance & primtive: {} / {}", ray.hit.t, ray.hit.prim); // 1.0 / 1
 ```
 
-## TODO
+### Strided
 
-* [ ] `build()` should return `Result`
-    * [ ] Check for node coutn in  CWBVH
-    * [ ] Check for primitives % 3
+If the vertices position are strided (located in a `Vertex` struct for instance),
+you can enable the `strided` feature and use:
+
+```rust
+use pas::slice_attr;
+use tinybvh_rs::{BVH, Intersector, Ray};
+
+#[repr(C)]
+#[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
+struct Vertex {
+    position: [f32; 4],
+    normal: [f32; 3],
+}
+
+let vertices = [
+    Vertex {
+        position: [-1.0, 1.0, -1.0, 0.0],
+        normal: [0.0, 0.0, 1.0]
+    },
+    Vertex {
+        position: [-0.5, 1.0, -1.0, 0.0],
+        normal: [0.0, 0.0, 1.0]
+    },
+    Vertex {
+        position: [-1.0, 0.0, -1.0, 0.0],
+        normal: [0.0, 0.0, 1.0]
+    },
+];
+let positions = slice_attr!(vertices, [0].position);
+let bvh = BVH::new_strided(&positions);
+```
