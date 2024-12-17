@@ -1,4 +1,4 @@
-# trinybvh-rs
+# tinybvh-rs
 
 Rust wrapper for [tinybvh](https://github.com/jbikker/tinybvh).
 
