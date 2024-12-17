@@ -33,6 +33,7 @@ macro_rules! impl_bvh {
             /// # Notes
             ///
             /// The `primitives` slice must contain 3 positions per primitive.
+            #[cfg(feature = "strided")]
             pub fn new_strided(primitives: &pas::Slice<[f32; 4]>) -> Self {
                 Self::new_internal().build_strided(primitives)
             }
@@ -52,24 +53,29 @@ macro_rules! impl_bvh {
                 .build(primitives)
             }
 
-            /// Build the BVH layout.
+            /// Rebuild the BVH layout.
             ///
             /// For complex BVH types, this can result in multiple builds.
             pub fn build(mut self, primitives: &'a [[f32; 4]]) -> Self {
-                // TODO: Return `Result` for non triangles list
-
-                let primitives = primitives.into();
-                self.inner.pin_mut().Build(&primitives);
+                if primitives.len() % 3 != 0 {
+                    panic!("primitives slice must triangulated (size multiple of 3)")
+                }
+                self.inner.pin_mut().Build(&primitives.into());
                 Self {
                     inner: self.inner,
                     _phantom: PhantomData,
                 }
             }
 
+            /// Rebuild the BVH layout.
+            ///
+            /// At the opposite of [`$name::build`], uses a strided primitives slice.
             #[cfg(feature = "strided")]
             pub fn build_strided(mut self, primitives: &pas::Slice<[f32; 4]>) -> Self {
-                let primitives = primitives.into();
-                self.inner.pin_mut().Build(&primitives);
+                if primitives.len() % 3 != 0 {
+                    panic!("primitives slice must triangulated (size multiple of 3)")
+                }
+                self.inner.pin_mut().Build(&primitives.into());
                 Self {
                     inner: self.inner,
                     _phantom: PhantomData,

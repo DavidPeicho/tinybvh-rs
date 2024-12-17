@@ -156,4 +156,16 @@ mod tests {
         let bvh: BVH<'_> = BVH::from_capture(capture, &triangles);
         assert_relative_eq!(bvh.nodes()[0].min[0], -5.0);
     }
+
+    #[test]
+    #[should_panic]
+    fn panic_non_triangulated() {
+        let primitives = [
+            [1.0, 0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0, 0.0],
+        ];
+        let _ = BVH::new(&primitives);
+    }
 }
