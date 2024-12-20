@@ -9,7 +9,8 @@ use std::{fmt::Debug, marker::PhantomData};
 pub struct Node4 {
     /// AABB min position.
     pub min: [f32; 3],
-    pub first_tri: u32,
+    /// Index of the first primitive in the node.
+    pub first_primitive: u32,
     /// AABB max position.
     pub max: [f32; 3],
     /// If the node is a leaf, number of triangles in the node.

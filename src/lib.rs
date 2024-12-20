@@ -1,4 +1,5 @@
-#![doc = include_str!("../README.md")]
+#![cfg_attr(not(doctest), doc = include_str!("../Readme.md"))]
+
 //! # Notes
 //!
 //! All constructed BVH have a lifetime bound required by tinybvh, which holds to the primitives slice.

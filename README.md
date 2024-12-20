@@ -51,7 +51,6 @@ If the vertices position are strided (located in a `Vertex` struct for instance)
 you can enable the `strided` feature and use:
 
 ```rust
-use pas::slice_attr;
 use tinybvh_rs::{BVH, Intersector, Ray};
 
 #[repr(C)]
@@ -75,6 +74,6 @@ let vertices = [
         normal: [0.0, 0.0, 1.0]
     },
 ];
-let positions = slice_attr!(vertices, [0].position);
+let positions = pas::slice_attr!(vertices, [0].position);
 let bvh = BVH::new_strided(&positions);
 ```
