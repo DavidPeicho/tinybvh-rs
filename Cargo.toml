@@ -2,7 +2,7 @@
 name = "tinybvh-rs"
 description = "Rust wrapper for tinybvh"
 repository = "https://github.com/DavidPeicho/tinybvh-rs"
-version = "0.1.0-beta.0"
+version = "0.1.0-beta.1"
 edition = "2021"
 license = "MIT"
 readme = "README.md"
