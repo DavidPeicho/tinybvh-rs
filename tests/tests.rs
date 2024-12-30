@@ -120,15 +120,15 @@ mod tests {
             [
                 PrimitiveCWBVH {
                     vertex_0: [-2.0, 1.0, -1.0],
-                    vertex_1: [-1.0, 1.0, -1.0],
-                    vertex_2: [-2.0, 0.0, -1.0],
+                    edge_1: [1.0, 0.0, 0.0],
+                    edge_2: [0.0, -1.0, 0.0],
                     original_primitive: 0,
                     ..Default::default()
                 },
                 PrimitiveCWBVH {
                     vertex_0: [2.0, 1.0, -1.0],
-                    vertex_1: [2.0, 0.0, -1.0],
-                    vertex_2: [1.0, 0.0, -1.0],
+                    edge_1: [0.0, -1.0, 0.0],
+                    edge_2: [-1.0, -1.0, 0.0],
                     original_primitive: 1,
                     ..Default::default()
                 }

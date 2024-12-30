@@ -47,9 +47,9 @@ impl NodeCWBVH {
 pub struct PrimitiveCWBVH {
     pub vertex_0: [f32; 3],
     pub original_primitive: u32,
-    pub vertex_1: [f32; 3],
+    pub edge_1: [f32; 3],
     pub padding_0: u32,
-    pub vertex_2: [f32; 3],
+    pub edge_2: [f32; 3],
     pub padding_1: u32,
 }
 
@@ -57,8 +57,8 @@ impl Debug for PrimitiveCWBVH {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("PrimitiveCWBVH")
             .field("vertex_0", &self.vertex_0)
-            .field("vertex_1", &self.vertex_1)
-            .field("vertex_2", &self.vertex_2)
+            .field("edge_1", &self.edge_1)
+            .field("edge_2", &self.edge_2)
             .field("original_primitive", &self.original_primitive)
             .finish()
     }
