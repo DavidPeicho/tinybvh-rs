@@ -47,11 +47,6 @@ unsafe impl cxx::ExternType for crate::NodeWald {
     type Id = cxx::type_id!("tinybvh::BVHNode");
     type Kind = cxx::kind::Trivial;
 }
-// Ensure `BVH4::BVHNode` always has a trivial move ctor and no destructor
-unsafe impl cxx::ExternType for crate::Node4 {
-    type Id = cxx::type_id!("tinybvh::BVHNode4");
-    type Kind = cxx::kind::Trivial;
-}
 
 #[cxx::bridge(namespace = "tinybvh")]
 pub(crate) mod ffi {
@@ -74,15 +69,6 @@ pub(crate) mod ffi {
         pub fn SAHCost(self: &BVH, node_idx: u32) -> f32;
         pub fn PrimCount(self: &BVH, node_idx: u32) -> i32;
         pub fn Intersect(self: &BVH, original: &mut Ray) -> i32;
-
-        // BVH4
-        pub type BVH4;
-        pub type BVHNode4 = crate::Node4;
-        pub fn BVH4_new() -> UniquePtr<BVH4>;
-        pub fn BVH4_nodes(bvh: &BVH4) -> &[BVHNode4];
-        pub fn BVH4_indices(bvh: &BVH4) -> &[u32];
-        pub fn Build(self: Pin<&mut BVH4>, primitives: &bvhvec4slice);
-        pub fn Intersect(self: &BVH4, original: &mut Ray) -> i32;
 
         // CWBVH
         pub type BVH8_CWBVH;

@@ -21,16 +21,6 @@ rust::Slice<const uint32_t> BVH_indices(const BVH& bvh) {
     return rust::Slice{const_cast<const uint32_t*>(bvh.triIdx), bvh.idxCount};
 }
 
-/** BVH4 */
-
-std::unique_ptr<BVH4> BVH4_new() { return std::make_unique<BVH4>(); }
-rust::Slice<const BVH4::BVHNode> BVH4_nodes(const BVH4& bvh) {
-    return rust::Slice{const_cast<const BVH4::BVHNode*>(bvh.bvh4Node), bvh.usedNodes};
-}
-rust::Slice<const uint32_t> BVH4_indices(const BVH4& bvh) {
-    return rust::Slice{const_cast<const uint32_t*>(bvh.bvh.triIdx), bvh.bvh.idxCount};
-}
-
 /** CWBVH */
 
 std::unique_ptr<BVH8_CWBVH> CWBVH_new() { return std::make_unique<BVH8_CWBVH>(); }

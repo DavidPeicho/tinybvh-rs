@@ -110,41 +110,6 @@ mod tests {
     }
 
     #[test]
-    fn layout_bvh4() {
-        let triangles = split_triangles();
-        let bvh = BVH4::new(&triangles);
-
-        let expected = [
-            Node4 {
-                min: [-2.0, 0.0, -1.0],
-                max: [2.0, 1.0, -1.0],
-                child: [2, 3, 0, 0],
-                child_count: 2,
-                ..Default::default()
-            },
-            Node4::default(),
-            Node4 {
-                min: [-2.0, 0.0, -1.0],
-                max: [-1.0, 1.0, -1.0],
-                tri_count: 1,
-                ..Default::default()
-            },
-            Node4 {
-                min: [1.0, 0.0, -1.0],
-                max: [2.0, 1.0, -1.0],
-                first_primitive: 1,
-                tri_count: 1,
-                ..Default::default()
-            },
-        ];
-        assert_eq!(bvh.nodes().len(), expected.len());
-        assert_eq!(bvh.nodes(), expected);
-
-        assert_eq!(bvh.indices(), [0, 1]);
-        test_intersection(&bvh);
-    }
-
-    #[test]
     fn layout_cwbvh() {
         let primitives = split_triangles();
         let bvh = CWBVH::new(&primitives);

@@ -1,7 +1,5 @@
-mod bvh4;
 mod cwbvh;
 mod wald;
-pub use bvh4::*;
 pub use cwbvh::*;
 pub use wald::*;
 
