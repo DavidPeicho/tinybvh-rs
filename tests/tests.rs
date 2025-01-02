@@ -113,7 +113,8 @@ mod tests {
     fn layout_cwbvh() {
         let primitives = split_triangles();
         let bvh = CWBVH::new(&primitives);
-        assert_eq!(bvh.nodes().len(), 5);
+        assert_eq!(bvh.nodes().len(), 1);
+        assert_eq!(bvh.nodes()[0].primitives().collect::<Vec<u32>>(), [0, 1]);
 
         assert_eq!(
             bvh.primitives(),

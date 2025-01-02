@@ -1,6 +1,49 @@
 use crate::ffi;
 use std::{fmt::Debug, marker::PhantomData};
 
+pub struct PrimitiveIter {
+    primitive_base_index: u32,
+    child_meta: [u8; 8],
+
+    curr_meta_idx: u8,
+    curr_tri_count: u8,
+}
+
+impl PrimitiveIter {
+    fn new(base_index: u32, meta: [u8; 8]) -> Self {
+        Self {
+            primitive_base_index: base_index,
+            child_meta: meta,
+
+            curr_meta_idx: 0,
+            curr_tri_count: 0,
+        }
+    }
+}
+
+impl Iterator for PrimitiveIter {
+    type Item = u32;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.curr_meta_idx as usize >= self.child_meta.len() {
+            return None;
+        }
+        while self.curr_meta_idx < self.child_meta.len() as u8 {
+            let meta = self.child_meta[self.curr_meta_idx as usize];
+            let triangles_count = (meta & 0b11100000).count_ones() as u8;
+            let current_tri_count = self.curr_tri_count;
+            self.curr_tri_count = self.curr_tri_count + 1;
+            if current_tri_count < triangles_count {
+                let start = meta & 0b00011111;
+                return Some(self.primitive_base_index + start as u32 + current_tri_count as u32);
+            }
+            self.curr_meta_idx = self.curr_meta_idx + 1;
+            self.curr_tri_count = 0;
+        }
+        None
+    }
+}
+
 /// Format specified in:
 /// "Efficient Incoherent Ray Traversal on GPUs Through Compressed Wide BVHs", Ylitie et al. 2017.
 ///
@@ -38,6 +81,13 @@ impl NodeCWBVH {
     /// Returns `true` if the node is a leaf.
     pub fn is_leaf(&self) -> bool {
         self.imask == 0
+    }
+
+    pub fn primitives(&self) -> PrimitiveIter {
+        if !self.is_leaf() {
+            return PrimitiveIter::new(0, [0, 0, 0, 0, 0, 0, 0, 0]);
+        }
+        PrimitiveIter::new(self.primitive_base_idx, self.child_meta)
     }
 }
 
