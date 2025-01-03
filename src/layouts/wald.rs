@@ -6,7 +6,7 @@ use std::{fmt::Debug, marker::PhantomData};
 /// Node layout used by [`BVH`].
 #[repr(C)]
 #[derive(Clone, Copy, Default, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct NodeWald {
+pub struct Node {
     /// AABB min position.
     pub min: [f32; 3],
     /// If the node is a leaf, this is the start index of the primitive.
@@ -19,26 +19,26 @@ pub struct NodeWald {
     pub tri_count: u32,
 }
 
-impl NodeWald {
+impl Node {
     /// Returns `true` if the node is a leaf.
     pub fn is_leaf(&self) -> bool {
         self.tri_count > 0
     }
 }
 
-/// BVH with node layout [`NodeWald`].
+/// BVH with node layout [`Node`].
 ///
 /// # Examples
 ///
 /// ```
-/// use tinybvh_rs::BVH;
+/// use tinybvh_rs::wald;
 ///
 /// let triangles = vec![
 ///     [-1.0, 1.0, 0.0, 0.0],
 ///     [1.0, 1.0, 0.0, 0.0],
 ///     [-1.0, 0.0, 0.0, 0.0]
 /// ];
-/// let bvh = BVH::new(&triangles);
+/// let bvh = wald::BVH::new(&triangles);
 /// ```
 pub struct BVH<'a> {
     inner: cxx::UniquePtr<ffi::BVH>,
@@ -64,7 +64,7 @@ impl<'a> BVH<'a> {
     /// BVH nodes.
     ///
     /// Useful to upload to the BVH to the GPU.
-    pub fn nodes(&self) -> &[NodeWald] {
+    pub fn nodes(&self) -> &[Node] {
         ffi::BVH_nodes(&self.inner)
     }
 

@@ -21,21 +21,14 @@ rust::Slice<const uint32_t> BVH_indices(const BVH& bvh) {
     return rust::Slice{const_cast<const uint32_t*>(bvh.triIdx), bvh.idxCount};
 }
 
-/** BVH4 */
-
-std::unique_ptr<BVH4> BVH4_new() { return std::make_unique<BVH4>(); }
-rust::Slice<const BVH4::BVHNode> BVH4_nodes(const BVH4& bvh) {
-    return rust::Slice{const_cast<const BVH4::BVHNode*>(bvh.bvh4Node), bvh.usedNodes};
-}
-rust::Slice<const uint32_t> BVH4_indices(const BVH4& bvh) {
-    return rust::Slice{const_cast<const uint32_t*>(bvh.bvh.triIdx), bvh.bvh.idxCount};
-}
-
 /** CWBVH */
 
 std::unique_ptr<BVH8_CWBVH> CWBVH_new() { return std::make_unique<BVH8_CWBVH>(); }
 const uint8_t* CWBVH_nodes(const BVH8_CWBVH& bvh) { return reinterpret_cast<const uint8_t*>(bvh.bvh8Data); }
-uint32_t CWBVH_nodes_count(const BVH8_CWBVH& bvh) { return bvh.usedBlocks; }
+uint32_t CWBVH_nodes_count(const BVH8_CWBVH& bvh) {
+    /* tinybvh `usedBlocks` is the number of `vec4`, **not** the number of nodes. */
+    return bvh.usedBlocks / 5;
+}
 const uint8_t* CWBVH_primitives(const BVH8_CWBVH& bvh) { return reinterpret_cast<const uint8_t*>(bvh.bvh8Tris); }
 uint32_t CWBVH_primitives_count(const BVH8_CWBVH& bvh) { return bvh.idxCount; }
 

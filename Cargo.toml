@@ -8,6 +8,7 @@ license = "MIT"
 readme = "README.md"
 keywords = ["graphics", "rendering", "tinybvh", "bvh"]
 include = [
+    "build.rs",
     "src/**/*.rs",
     "ffi/include/**/*.h",
     "ffi/src/**/.cpp",

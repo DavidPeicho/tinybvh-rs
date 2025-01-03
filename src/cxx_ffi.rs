@@ -43,13 +43,8 @@ unsafe impl cxx::ExternType for crate::Ray {
     type Kind = cxx::kind::Trivial;
 }
 // Ensure `BVH::BVHNode` always has a trivial move ctor and no destructor
-unsafe impl cxx::ExternType for crate::NodeWald {
+unsafe impl cxx::ExternType for crate::wald::Node {
     type Id = cxx::type_id!("tinybvh::BVHNode");
-    type Kind = cxx::kind::Trivial;
-}
-// Ensure `BVH4::BVHNode` always has a trivial move ctor and no destructor
-unsafe impl cxx::ExternType for crate::Node4 {
-    type Id = cxx::type_id!("tinybvh::BVHNode4");
     type Kind = cxx::kind::Trivial;
 }
 
@@ -65,24 +60,16 @@ pub(crate) mod ffi {
 
         // BVH
         pub type BVH;
-        pub type BVHNode = crate::NodeWald;
+        pub type BVHNode = crate::wald::Node;
         pub fn BVH_new() -> UniquePtr<BVH>;
         pub fn BVH_nodes(bvh: &BVH) -> &[BVHNode];
         pub fn BVH_indices(bvh: &BVH) -> &[u32];
         pub fn Build(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
+        pub fn BuildHQ(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn Compact(self: Pin<&mut BVH>);
         pub fn SAHCost(self: &BVH, node_idx: u32) -> f32;
         pub fn PrimCount(self: &BVH, node_idx: u32) -> i32;
         pub fn Intersect(self: &BVH, original: &mut Ray) -> i32;
-
-        // BVH4
-        pub type BVH4;
-        pub type BVHNode4 = crate::Node4;
-        pub fn BVH4_new() -> UniquePtr<BVH4>;
-        pub fn BVH4_nodes(bvh: &BVH4) -> &[BVHNode4];
-        pub fn BVH4_indices(bvh: &BVH4) -> &[u32];
-        pub fn Build(self: Pin<&mut BVH4>, primitives: &bvhvec4slice);
-        pub fn Intersect(self: &BVH4, original: &mut Ray) -> i32;
 
         // CWBVH
         pub type BVH8_CWBVH;
@@ -92,6 +79,7 @@ pub(crate) mod ffi {
         pub fn CWBVH_primitives(bvh: &BVH8_CWBVH) -> *const u8;
         pub fn CWBVH_primitives_count(bvh: &BVH8_CWBVH) -> u32;
         pub fn Build(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
+        pub fn BuildHQ(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
         pub fn Intersect(self: &BVH8_CWBVH, original: &mut Ray) -> i32;
     }
 }
