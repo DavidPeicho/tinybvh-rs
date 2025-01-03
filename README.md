@@ -75,5 +75,5 @@ let vertices = [
     },
 ];
 let positions = pas::slice_attr!(vertices, [0].position);
-let bvh = wald::BVH::new(&positions);
+let bvh = wald::BVH::new(positions);
 ```
