@@ -15,7 +15,7 @@ For more information about each layout: [tinybvh](https://github.com/jbikker/tin
 ### BVH Wald
 
 ```rust
-use tinybvh_rs::{BVH, Intersector, Ray};
+use tinybvh_rs::{Intersector, Ray};
 
 let primitives = vec![
     [-2.0, 1.0, -1.0, 0.0],    //
@@ -27,7 +27,7 @@ let primitives = vec![
     [1.0, 0.0, -1.0, 0.0],     //
 ];
 
-let bvh = BVH::new(&primitives);
+let bvh = wald::BVH::new(&primitives);
 
 // No intersection, ray pass between the primitives
 let mut ray = Ray::new([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]);
@@ -51,7 +51,7 @@ If the vertices position are strided (located in a `Vertex` struct for instance)
 you can enable the `strided` feature and use:
 
 ```rust
-use tinybvh_rs::{BVH, Intersector, Ray};
+use tinybvh_rs::{Intersector, Ray};
 
 #[repr(C)]
 #[derive(Clone, Copy, bytemuck::Pod, bytemuck::Zeroable)]
@@ -75,5 +75,5 @@ let vertices = [
     },
 ];
 let positions = pas::slice_attr!(vertices, [0].position);
-let bvh = BVH::new_strided(&positions);
+let bvh = wald::BVH::new_strided(&positions);
 ```

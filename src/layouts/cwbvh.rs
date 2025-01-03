@@ -47,10 +47,10 @@ impl Iterator for PrimitiveIter {
 /// Format specified in:
 /// "Efficient Incoherent Ray Traversal on GPUs Through Compressed Wide BVHs", Ylitie et al. 2017.
 ///
-/// Node layout used by [`CWBVH`].
+/// Node layout used by [`BVH`].
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct NodeCWBVH {
+pub struct Node {
     /// AABB min.
     pub min: [f32; 3],
     /// Exponent used for child AABB decompression.
@@ -77,7 +77,7 @@ pub struct NodeCWBVH {
     pub qhi_z: [u8; 8],
 }
 
-impl NodeCWBVH {
+impl Node {
     /// Returns `true` if the node is a leaf.
     pub fn is_leaf(&self) -> bool {
         self.imask == 0
@@ -91,21 +91,21 @@ impl NodeCWBVH {
     }
 }
 
-/// Custom primitive used by [`CWBVH`].
+/// Custom primitive used by [`BVH`].
 #[repr(C)]
 #[derive(Clone, Copy, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
-pub struct PrimitiveCWBVH {
-    pub vertex_0: [f32; 3],
-    pub original_primitive: u32,
+pub struct Primitive {
     pub edge_1: [f32; 3],
     pub padding_0: u32,
     pub edge_2: [f32; 3],
     pub padding_1: u32,
+    pub vertex_0: [f32; 3],
+    pub original_primitive: u32,
 }
 
-impl Debug for PrimitiveCWBVH {
+impl Debug for Primitive {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.debug_struct("PrimitiveCWBVH")
+        f.debug_struct("cwbvh::Primitive")
             .field("vertex_0", &self.vertex_0)
             .field("edge_1", &self.edge_1)
             .field("edge_2", &self.edge_2)
@@ -114,16 +114,16 @@ impl Debug for PrimitiveCWBVH {
     }
 }
 
-/// CWBVH with node layout [`NodeCWBVH`].
-pub struct CWBVH<'a> {
+/// CWBVH with node layout [`Node`].
+pub struct BVH<'a> {
     inner: cxx::UniquePtr<ffi::BVH8_CWBVH>,
     _phantom: PhantomData<&'a [f32; 4]>,
 }
 
-impl<'a> CWBVH<'a> {
-    pub fn nodes(&self) -> &[NodeCWBVH] {
+impl<'a> BVH<'a> {
+    pub fn nodes(&self) -> &[Node] {
         // TODO: Create CWBVH node in tinybvh to avoid that.
-        let ptr = ffi::CWBVH_nodes(&self.inner) as *const NodeCWBVH;
+        let ptr = ffi::CWBVH_nodes(&self.inner) as *const Node;
         let count = ffi::CWBVH_nodes_count(&self.inner);
         unsafe { std::slice::from_raw_parts(ptr, count as usize) }
     }
@@ -132,9 +132,9 @@ impl<'a> CWBVH<'a> {
     ///
     /// This layout is intersected using a custom primitive array
     /// instead of the original list used during building.
-    pub fn primitives(&self) -> &[PrimitiveCWBVH] {
+    pub fn primitives(&self) -> &[Primitive] {
         // TODO: Create struct in tinybvh to avoid that.
-        let ptr = ffi::CWBVH_primitives(&self.inner) as *const PrimitiveCWBVH;
+        let ptr = ffi::CWBVH_primitives(&self.inner) as *const Primitive;
         let count = ffi::CWBVH_primitives_count(&self.inner);
         unsafe { std::slice::from_raw_parts(ptr, count as usize) }
     }
@@ -146,4 +146,4 @@ impl<'a> CWBVH<'a> {
         }
     }
 }
-super::impl_bvh!(CWBVH, BVH8_CWBVH);
+super::impl_bvh!(BVH, BVH8_CWBVH);

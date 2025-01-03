@@ -1,7 +1,5 @@
-mod cwbvh;
-mod wald;
-pub use cwbvh::*;
-pub use wald::*;
+pub mod cwbvh;
+pub mod wald;
 
 /// Holds BVH data without lifetfime bound.
 ///
@@ -34,6 +32,25 @@ macro_rules! impl_bvh {
             #[cfg(feature = "strided")]
             pub fn new_strided(primitives: &pas::Slice<[f32; 4]>) -> Self {
                 Self::new_internal().build_strided(primitives)
+            }
+
+            /// Create a new BVH from positions.
+            ///
+            /// # Notes
+            ///
+            /// Uses [`Self::build_hq`]
+            pub fn new_hq(primitives: &'a [[f32; 4]]) -> Self {
+                Self::new_internal().build_hq(primitives)
+            }
+
+            /// Create a new BVH from a strided slice of positions.
+            ///
+            /// # Notes
+            ///
+            /// Uses [`Self::build_hq`]
+            #[cfg(feature = "strided")]
+            pub fn new_hq_strided(primitives: &pas::Slice<[f32; 4]>) -> Self {
+                Self::new_internal().build_hq_strided(primitives)
             }
 
             /// Create the BVH from a capture.
@@ -80,6 +97,37 @@ macro_rules! impl_bvh {
                 }
             }
 
+            /// Rebuild the BVH layout using a high quality builder.
+            ///
+            /// For complex BVH types, this can result in multiple builds.
+            ///
+            /// For more_hq information: [tinybvh README.md](https://github.com/jbikker/tinybvh/blob/main/README.md).
+            pub fn build_hq(mut self, primitives: &'a [[f32; 4]]) -> Self {
+                if primitives.len() % 3 != 0 {
+                    panic!("primitives slice must triangulated (size multiple of 3)")
+                }
+                self.inner.pin_mut().BuildHQ(&primitives.into());
+                Self {
+                    inner: self.inner,
+                    _phantom: PhantomData,
+                }
+            }
+
+            /// Rebuild the BVH layout.
+            ///
+            /// At the opposite of [`$name::build_hq`], uses a strided primitives slice.
+            #[cfg(feature = "strided")]
+            pub fn build_hq_strided(mut self, primitives: &pas::Slice<[f32; 4]>) -> Self {
+                if primitives.len() % 3 != 0 {
+                    panic!("primitives slice must triangulated (size multiple of 3)")
+                }
+                self.inner.pin_mut().BuildHQ(&primitives.into());
+                Self {
+                    inner: self.inner,
+                    _phantom: PhantomData,
+                }
+            }
+
             /// Temporarily move the BVH to loosen the primitives lifetime.
             ///
             /// Useful if editing the primitives is required, without re-allocating
@@ -88,7 +136,7 @@ macro_rules! impl_bvh {
             /// # Examples
             ///
             /// ```
-            /// use tinybvh_rs::BVH;
+            /// use tinybvh_rs::wald::BVH;
             ///
             /// let mut triangles = vec![
             ///     [-1.0, 1.0, 0.0, 0.0],
