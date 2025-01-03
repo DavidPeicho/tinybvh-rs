@@ -32,12 +32,12 @@ impl Iterator for PrimitiveIter {
             let meta = self.child_meta[self.curr_meta_idx as usize];
             let triangles_count = (meta & 0b11100000).count_ones() as u8;
             let current_tri_count = self.curr_tri_count;
-            self.curr_tri_count = self.curr_tri_count + 1;
+            self.curr_tri_count += 1;
             if current_tri_count < triangles_count {
                 let start = meta & 0b00011111;
                 return Some(self.primitive_base_index + start as u32 + current_tri_count as u32);
             }
-            self.curr_meta_idx = self.curr_meta_idx + 1;
+            self.curr_meta_idx += 1;
             self.curr_tri_count = 0;
         }
         None

@@ -32,7 +32,6 @@ mod tests {
         assert_eq!(ray.hit.prim, 1);
     }
 
-    #[cfg(feature = "strided")]
     #[repr(C)]
     #[derive(Clone, Copy, Default, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
     struct Vertex {
@@ -43,7 +42,7 @@ mod tests {
     #[test]
     fn layout_wald32() {
         let triangles = split_triangles();
-        let mut bvh = wald::BVH::new(&triangles);
+        let mut bvh = wald::BVH::new(triangles.as_slice());
         let expected = [
             wald::Node {
                 min: [-2.0, 0.0, -1.0],
@@ -71,7 +70,6 @@ mod tests {
         test_intersection(&bvh);
         bvh.compact();
 
-        #[cfg(feature = "strided")]
         {
             use pas::slice_attr;
             let primitives = [
@@ -101,7 +99,7 @@ mod tests {
                 },
             ];
             let positions = slice_attr!(primitives, [0].position);
-            let bvh = wald::BVH::new_strided(&positions);
+            let bvh = wald::BVH::new(positions);
             assert_eq!(bvh.nodes().len(), expected.len());
             assert_eq!(bvh.nodes(), expected);
             assert_eq!(bvh.indices(), [0, 1]);
@@ -112,7 +110,7 @@ mod tests {
     #[test]
     fn layout_cwbvh() {
         let primitives = split_triangles();
-        let bvh = cwbvh::BVH::new(&primitives);
+        let bvh = cwbvh::BVH::new(primitives.as_slice());
         assert_eq!(bvh.nodes().len(), 1);
         assert_eq!(bvh.nodes()[0].primitives().collect::<Vec<u32>>(), [0, 1]);
 
@@ -145,6 +143,7 @@ mod tests {
 
         let capture = bvh.capture();
         triangles[0][0] = -5.0;
+
         let bvh = wald::BVH::from_capture(capture, &triangles);
         assert_relative_eq!(bvh.nodes()[0].min[0], -5.0);
     }
