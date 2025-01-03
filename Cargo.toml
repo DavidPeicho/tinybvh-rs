@@ -11,7 +11,7 @@ include = [
     "build.rs",
     "src/**/*.rs",
     "ffi/include/**/*.h",
-    "ffi/src/**/.cpp",
+    "ffi/src/**/*.cpp",
     "ffi/tinybvh/tiny_bvh.h",
     "Cargo.toml",
 ]
