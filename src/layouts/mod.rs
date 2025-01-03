@@ -15,51 +15,31 @@ pub struct Capture<T> {
 macro_rules! impl_bvh {
     ($name: ident, $ffi_name: ident) => {
         impl<'a> $name<'a> {
-            /// Create a new BVH from positions.
+            /// Create a new BVH from a strided slice of positions.
             ///
             /// # Notes
             ///
             /// The `primitives` slice must contain 3 positions per primitive.
-            pub fn new(primitives: &'a [[f32; 4]]) -> Self {
+            pub fn new<S: Into<crate::Positions<'a>>>(primitives: S) -> Self {
                 Self::new_internal().build(primitives)
             }
 
-            /// Create a new BVH from a strided slice of positions.
-            ///
-            /// # Notes
-            ///
-            /// The `primitives` slice must contain 3 positions per primitive.
-            #[cfg(feature = "strided")]
-            pub fn new_strided(primitives: &pas::Slice<[f32; 4]>) -> Self {
-                Self::new_internal().build_strided(primitives)
-            }
-
             /// Create a new BVH from positions.
             ///
             /// # Notes
             ///
             /// Uses [`Self::build_hq`]
-            pub fn new_hq(primitives: &'a [[f32; 4]]) -> Self {
+            pub fn new_hq<S: Into<crate::Positions<'a>>>(primitives: S) -> Self {
                 Self::new_internal().build_hq(primitives)
-            }
-
-            /// Create a new BVH from a strided slice of positions.
-            ///
-            /// # Notes
-            ///
-            /// Uses [`Self::build_hq`]
-            #[cfg(feature = "strided")]
-            pub fn new_hq_strided(primitives: &pas::Slice<[f32; 4]>) -> Self {
-                Self::new_internal().build_hq_strided(primitives)
             }
 
             /// Create the BVH from a capture.
             ///
             /// At the opposite of [`$name:new`], this method might not re-allocate
             /// the BVH data, and instead re-use the captured ones.
-            pub fn from_capture(
+            pub fn from_capture<S: Into<crate::Positions<'a>>>(
                 capture: crate::Capture<cxx::UniquePtr<ffi::$ffi_name>>,
-                primitives: &'a [[f32; 4]],
+                primitives: S,
             ) -> Self {
                 Self {
                     inner: capture.inner,
@@ -71,26 +51,12 @@ macro_rules! impl_bvh {
             /// Rebuild the BVH layout.
             ///
             /// For complex BVH types, this can result in multiple builds.
-            pub fn build(mut self, primitives: &'a [[f32; 4]]) -> Self {
-                if primitives.len() % 3 != 0 {
+            pub fn build<S: Into<crate::Positions<'a>>>(mut self, primitives: S) -> Self {
+                let slice = primitives.into();
+                if slice.len() % 3 != 0 {
                     panic!("primitives slice must triangulated (size multiple of 3)")
                 }
-                self.inner.pin_mut().Build(&primitives.into());
-                Self {
-                    inner: self.inner,
-                    _phantom: PhantomData,
-                }
-            }
-
-            /// Rebuild the BVH layout.
-            ///
-            /// At the opposite of [`$name::build`], uses a strided primitives slice.
-            #[cfg(feature = "strided")]
-            pub fn build_strided(mut self, primitives: &pas::Slice<[f32; 4]>) -> Self {
-                if primitives.len() % 3 != 0 {
-                    panic!("primitives slice must triangulated (size multiple of 3)")
-                }
-                self.inner.pin_mut().Build(&primitives.into());
+                self.inner.pin_mut().Build(&slice.into());
                 Self {
                     inner: self.inner,
                     _phantom: PhantomData,
@@ -99,29 +65,13 @@ macro_rules! impl_bvh {
 
             /// Rebuild the BVH layout using a high quality builder.
             ///
-            /// For complex BVH types, this can result in multiple builds.
-            ///
             /// For more_hq information: [tinybvh README.md](https://github.com/jbikker/tinybvh/blob/main/README.md).
-            pub fn build_hq(mut self, primitives: &'a [[f32; 4]]) -> Self {
-                if primitives.len() % 3 != 0 {
+            pub fn build_hq<S: Into<crate::Positions<'a>>>(mut self, primitives: S) -> Self {
+                let slice = primitives.into();
+                if slice.len() % 3 != 0 {
                     panic!("primitives slice must triangulated (size multiple of 3)")
                 }
-                self.inner.pin_mut().BuildHQ(&primitives.into());
-                Self {
-                    inner: self.inner,
-                    _phantom: PhantomData,
-                }
-            }
-
-            /// Rebuild the BVH layout.
-            ///
-            /// At the opposite of [`$name::build_hq`], uses a strided primitives slice.
-            #[cfg(feature = "strided")]
-            pub fn build_hq_strided(mut self, primitives: &pas::Slice<[f32; 4]>) -> Self {
-                if primitives.len() % 3 != 0 {
-                    panic!("primitives slice must triangulated (size multiple of 3)")
-                }
-                self.inner.pin_mut().BuildHQ(&primitives.into());
+                self.inner.pin_mut().BuildHQ(&slice.into());
                 Self {
                     inner: self.inner,
                     _phantom: PhantomData,

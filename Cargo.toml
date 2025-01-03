@@ -16,13 +16,10 @@ include = [
     "Cargo.toml",
 ]
 
-[features]
-strided = ["dep:pas"]
-
 [dependencies]
 bytemuck = { version = "1.20.0", features = ["derive"] }
 cxx = "1.0"
-pas = { version = "0.2.0", optional = true }
+pas = { version = "0.3.0" }
 
 [build-dependencies]
 cxx-build = "1.0"

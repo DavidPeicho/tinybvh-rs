@@ -6,19 +6,8 @@ pub struct Vec4Slice {
     stride: u32,
 }
 
-impl From<&[[f32; 4]]> for Vec4Slice {
-    fn from(value: &[[f32; 4]]) -> Self {
-        Self {
-            data: value.as_ptr() as *const i32,
-            count: value.len() as u32,
-            stride: std::mem::size_of::<[f32; 4]>() as u32,
-        }
-    }
-}
-
-#[cfg(feature = "strided")]
-impl From<&pas::Slice<'_, [f32; 4]>> for Vec4Slice {
-    fn from(value: &pas::Slice<[f32; 4]>) -> Self {
+impl From<pas::Slice<'_, [f32; 4]>> for Vec4Slice {
+    fn from(value: pas::Slice<[f32; 4]>) -> Self {
         Self {
             data: value.as_ptr() as *const i32,
             count: value.len() as u32,
