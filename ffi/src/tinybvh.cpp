@@ -32,4 +32,9 @@ uint32_t CWBVH_nodes_count(const BVH8_CWBVH& bvh) {
 const uint8_t* CWBVH_primitives(const BVH8_CWBVH& bvh) { return reinterpret_cast<const uint8_t*>(bvh.bvh8Tris); }
 uint32_t CWBVH_primitives_count(const BVH8_CWBVH& bvh) { return bvh.idxCount; }
 
+/** Verbose */
+
+std::unique_ptr<BVH_Verbose> BVH_Verbose_new() { return std::make_unique<BVH_Verbose>(); }
+
+
 }

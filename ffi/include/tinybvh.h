@@ -29,6 +29,12 @@ uint32_t CWBVH_nodes_count(const BVH8_CWBVH&);
 const uint8_t* CWBVH_primitives(const BVH8_CWBVH&);
 uint32_t CWBVH_primitives_count(const BVH8_CWBVH&);
 
+/* Verbose */
+
+using BVHNode = BVH::BVHNode;
+std::unique_ptr<BVH_Verbose> BVH_Verbose_new();
+
+
 }
 
 #endif

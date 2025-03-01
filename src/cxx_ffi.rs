@@ -56,6 +56,7 @@ pub(crate) mod ffi {
         pub fn Build(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn BuildHQ(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn Compact(self: Pin<&mut BVH>);
+        pub fn ConvertFrom(self: Pin<&mut BVH>, original: &BVH_Verbose, compact: bool);
         pub fn SAHCost(self: &BVH, node_idx: u32) -> f32;
         pub fn PrimCount(self: &BVH, node_idx: u32) -> i32;
         pub fn Intersect(self: &BVH, original: &mut Ray) -> i32;
@@ -70,5 +71,12 @@ pub(crate) mod ffi {
         pub fn Build(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
         pub fn BuildHQ(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
         pub fn Intersect(self: &BVH8_CWBVH, original: &mut Ray) -> i32;
+
+        // Verbose
+        pub type BVH_Verbose;
+        pub fn BVH_Verbose_new() -> UniquePtr<BVH_Verbose>;
+        pub fn ConvertFrom(self: Pin<&mut BVH_Verbose>, original: &BVH, compact: bool);
+        pub fn Refit(self: Pin<&mut BVH_Verbose>, node: u32, skip_leaf: bool);
+        pub fn Optimize(self: Pin<&mut BVH_Verbose>, iterations: u32, extreme: bool);
     }
 }

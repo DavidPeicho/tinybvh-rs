@@ -1,4 +1,5 @@
 pub mod cwbvh;
+pub mod verbose;
 pub mod wald;
 
 /// Holds BVH data without lifetfime bound.

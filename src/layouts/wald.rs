@@ -1,6 +1,8 @@
 use crate::ffi;
 use std::{fmt::Debug, marker::PhantomData};
 
+use super::verbose;
+
 /// "Traditional" 32-bytes BVH node layout, as proposed by Ingo Wald.
 ///
 /// Node layout used by [`BVH`].
@@ -41,7 +43,7 @@ impl Node {
 /// let bvh = wald::BVH::new(&triangles);
 /// ```
 pub struct BVH<'a> {
-    inner: cxx::UniquePtr<ffi::BVH>,
+    pub(crate) inner: cxx::UniquePtr<ffi::BVH>,
     _phantom: PhantomData<&'a [f32; 4]>,
 }
 
@@ -49,6 +51,14 @@ impl<'a> BVH<'a> {
     // Remove unused nodes and reduce the size of the BVH.
     pub fn compact(&mut self) {
         self.inner.pin_mut().Compact();
+    }
+
+    pub fn convert_from(mut self, original: &verbose::BVH) -> Self {
+        self.inner.pin_mut().ConvertFrom(&original.inner, true);
+        Self {
+            inner: self.inner,
+            _phantom: PhantomData,
+        }
     }
 
     /// Number of primitives for a given node.

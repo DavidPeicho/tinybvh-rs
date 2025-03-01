@@ -135,6 +135,16 @@ mod tests {
         );
     }
 
+    fn verbose() {
+        let primitives = split_triangles();
+        let mut bvh = wald::BVH::new(primitives.as_slice());
+        let verbose = verbose::BVH::build(&bvh);
+
+        bvh = bvh.convert_from(&verbose);
+    }
+
+    fn verbose_refit() {}
+
     #[test]
     fn capture() {
         let mut triangles = split_triangles();
