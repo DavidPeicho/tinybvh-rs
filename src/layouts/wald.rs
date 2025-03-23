@@ -48,6 +48,54 @@ pub struct BVH<'a> {
 }
 
 impl<'a> BVH<'a> {
+    /// Create a new BVH from a strided slice of positions.
+    ///
+    /// # Notes
+    ///
+    /// The `primitives` slice must contain 3 positions per primitive.
+    pub fn new<S: Into<crate::Positions<'a>>>(primitives: S) -> Self {
+        Self::new_internal().build(primitives)
+    }
+
+    /// Create a new BVH from positions.
+    ///
+    /// # Notes
+    ///
+    /// Uses [`Self::build_hq`]
+    pub fn new_hq<S: Into<crate::Positions<'a>>>(primitives: S) -> Self {
+        Self::new_internal().build_hq(primitives)
+    }
+
+    /// Rebuild the BVH layout.
+    ///
+    /// For complex BVH types, this can result in multiple builds.
+    pub fn build<S: Into<crate::Positions<'a>>>(mut self, primitives: S) -> Self {
+        let slice = primitives.into();
+        if slice.len() % 3 != 0 {
+            panic!("primitives slice must triangulated (size multiple of 3)")
+        }
+        self.inner.pin_mut().Build(&slice.into());
+        Self {
+            inner: self.inner,
+            _phantom: PhantomData,
+        }
+    }
+
+    /// Rebuild the BVH layout using a high quality builder.
+    ///
+    /// For more_hq information: [tinybvh README.md](https://github.com/jbikker/tinybvh/blob/main/README.md).
+    pub fn build_hq<S: Into<crate::Positions<'a>>>(mut self, primitives: S) -> Self {
+        let slice = primitives.into();
+        if slice.len() % 3 != 0 {
+            panic!("primitives slice must triangulated (size multiple of 3)")
+        }
+        self.inner.pin_mut().BuildHQ(&slice.into());
+        Self {
+            inner: self.inner,
+            _phantom: PhantomData,
+        }
+    }
+
     // Remove unused nodes and reduce the size of the BVH.
     pub fn compact(&mut self) {
         self.inner.pin_mut().Compact();
@@ -59,6 +107,10 @@ impl<'a> BVH<'a> {
             inner: self.inner,
             _phantom: PhantomData,
         }
+    }
+
+    pub fn split_leaves(&mut self, max_primitives: u32) {
+        self.inner.pin_mut().SplitLeafs(max_primitives);
     }
 
     /// Number of primitives for a given node.

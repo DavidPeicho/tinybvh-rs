@@ -57,9 +57,21 @@ pub(crate) mod ffi {
         pub fn BuildHQ(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn Compact(self: Pin<&mut BVH>);
         pub fn ConvertFrom(self: Pin<&mut BVH>, original: &BVH_Verbose, compact: bool);
+        pub fn SplitLeafs(self: Pin<&mut BVH>, max_prim: u32);
         pub fn SAHCost(self: &BVH, node_idx: u32) -> f32;
         pub fn PrimCount(self: &BVH, node_idx: u32) -> i32;
         pub fn Intersect(self: &BVH, original: &mut Ray) -> i32;
+
+        // Verbose
+        pub type BVH_Verbose;
+        pub fn BVH_Verbose_new() -> UniquePtr<BVH_Verbose>;
+        pub fn ConvertFrom(self: Pin<&mut BVH_Verbose>, original: &BVH, compact: bool);
+        pub fn Refit(self: Pin<&mut BVH_Verbose>, node: u32, skip_leaf: bool);
+        pub fn Optimize(self: Pin<&mut BVH_Verbose>, iterations: u32, extreme: bool);
+
+        pub type MBVH8;
+        pub fn MBVH8_new() -> UniquePtr<MBVH8>;
+        pub fn ConvertFrom(self: Pin<&mut MBVH8>, original: &BVH, compact: bool);
 
         // CWBVH
         pub type BVH8_CWBVH;
@@ -68,15 +80,9 @@ pub(crate) mod ffi {
         pub fn CWBVH_nodes_count(bvh: &BVH8_CWBVH) -> u32;
         pub fn CWBVH_primitives(bvh: &BVH8_CWBVH) -> *const u8;
         pub fn CWBVH_primitives_count(bvh: &BVH8_CWBVH) -> u32;
+        pub fn ConvertFrom(self: Pin<&mut BVH8_CWBVH>, original: &MBVH8, compact: bool);
         pub fn Build(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
         pub fn BuildHQ(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
         pub fn Intersect(self: &BVH8_CWBVH, original: &mut Ray) -> i32;
-
-        // Verbose
-        pub type BVH_Verbose;
-        pub fn BVH_Verbose_new() -> UniquePtr<BVH_Verbose>;
-        pub fn ConvertFrom(self: Pin<&mut BVH_Verbose>, original: &BVH, compact: bool);
-        pub fn Refit(self: Pin<&mut BVH_Verbose>, node: u32, skip_leaf: bool);
-        pub fn Optimize(self: Pin<&mut BVH_Verbose>, iterations: u32, extreme: bool);
     }
 }

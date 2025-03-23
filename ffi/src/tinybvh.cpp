@@ -21,6 +21,10 @@ rust::Slice<const uint32_t> BVH_indices(const BVH& bvh) {
     return rust::Slice{const_cast<const uint32_t*>(bvh.primIdx), bvh.idxCount};
 }
 
+/** MBVH<8> */
+
+std::unique_ptr<MBVH8> MBVH8_new() { return std::make_unique<MBVH8>(); }
+
 /** CWBVH */
 
 std::unique_ptr<BVH8_CWBVH> CWBVH_new() { return std::make_unique<BVH8_CWBVH>(); }

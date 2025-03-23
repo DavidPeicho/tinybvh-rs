@@ -1,5 +1,7 @@
 use crate::ffi;
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
+
+use super::{mbvh, wald};
 
 pub struct PrimitiveIter {
     primitive_base_index: u32,
@@ -115,12 +117,47 @@ impl Debug for Primitive {
 }
 
 /// CWBVH with node layout [`Node`].
-pub struct BVH<'a> {
+pub struct BVH {
     inner: cxx::UniquePtr<ffi::BVH8_CWBVH>,
-    _phantom: PhantomData<&'a [f32; 4]>,
 }
 
-impl<'a> BVH<'a> {
+impl BVH {
+    /// Create a new BVH from a strided slice of positions.
+    ///
+    /// # Notes
+    ///
+    /// The `primitives` slice must contain 3 positions per primitive.
+    pub fn new<'a, S: Into<crate::Positions<'a>>>(primitives: S) -> Self {
+        let mut bvh = wald::BVH::new(primitives);
+        bvh.split_leaves(3);
+        let mbvh = mbvh::BVH8::from(&bvh);
+        Self::from(&mbvh)
+    }
+
+    /// Create a new BVH from positions.
+    ///
+    /// # Notes
+    ///
+    /// Uses [`Self::build_hq`]
+    pub fn new_hq<'a, S: Into<crate::Positions<'a>>>(primitives: S) -> Self {
+        let mut bvh = wald::BVH::new_hq(primitives);
+        bvh.split_leaves(3);
+        let mbvh = mbvh::BVH8::from(&bvh);
+        Self::from(&mbvh)
+    }
+
+    pub fn from(original: &mbvh::BVH8) -> Self {
+        Self {
+            inner: ffi::CWBVH_new(),
+        }
+        .convert_from(original)
+    }
+
+    pub fn convert_from(mut self, original: &mbvh::BVH8) -> Self {
+        self.inner.pin_mut().ConvertFrom(&original.inner, true);
+        self
+    }
+
     pub fn nodes(&self) -> &[Node] {
         // TODO: Create CWBVH node in tinybvh to avoid that.
         let ptr = ffi::CWBVH_nodes(&self.inner) as *const Node;
@@ -138,12 +175,5 @@ impl<'a> BVH<'a> {
         let count = ffi::CWBVH_primitives_count(&self.inner);
         unsafe { std::slice::from_raw_parts(ptr, count as usize) }
     }
-
-    pub fn new_internal() -> Self {
-        Self {
-            inner: ffi::CWBVH_new(),
-            _phantom: PhantomData,
-        }
-    }
 }
-super::impl_bvh!(BVH, BVH8_CWBVH);
+// super::impl_bvh!(BVH, BVH8_CWBVH);

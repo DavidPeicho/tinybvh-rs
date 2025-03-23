@@ -110,6 +110,7 @@ mod tests {
     #[test]
     fn layout_cwbvh() {
         let primitives = split_triangles();
+
         let bvh = cwbvh::BVH::new(primitives.as_slice());
         assert_eq!(bvh.nodes().len(), 1);
         assert_eq!(bvh.nodes()[0].primitives().collect::<Vec<u32>>(), [0, 1]);
@@ -135,15 +136,38 @@ mod tests {
         );
     }
 
+    fn non_owned() {
+        let primitives = split_triangles();
+
+        let bvh = wald::BVH::new(primitives.as_slice());
+        assert_eq!(bvh.nodes().len(), 4);
+
+        let mbvh = mbvh::BVH8::from(&bvh);
+        // TODO: Test mbvh nodes
+
+        let cwbvh = cwbvh::BVH::from(&mbvh);
+        assert_eq!(cwbvh.nodes().len(), 1);
+        assert_eq!(cwbvh.primitives().len(), 2);
+    }
+
     fn verbose() {
         let primitives = split_triangles();
         let mut bvh = wald::BVH::new(primitives.as_slice());
         let verbose = verbose::BVH::build(&bvh);
-
         bvh = bvh.convert_from(&verbose);
     }
 
     fn verbose_refit() {}
+
+    fn verbose_cwbvh_optimize() {
+        // let primitives = split_triangles();
+
+        // let mut bvh = wald::BVH::new(primitives);
+        // let verbose = verbose::BVH::build(&bvh);
+        // bvh.convert_from(&verbose);
+
+        // let mbvh = mbvh::BVH8::new(&bvh);
+    }
 
     #[test]
     fn capture() {
