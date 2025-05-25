@@ -18,7 +18,7 @@ rust::Slice<const BVHNode> BVH_nodes(const BVH& bvh) {
     return rust::Slice{const_cast<const BVHNode*>(bvh.bvhNode), bvh.usedNodes};
 }
 rust::Slice<const uint32_t> BVH_indices(const BVH& bvh) {
-    return rust::Slice{const_cast<const uint32_t*>(bvh.triIdx), bvh.idxCount};
+    return rust::Slice{const_cast<const uint32_t*>(bvh.primIdx), bvh.idxCount};
 }
 
 /** CWBVH */
