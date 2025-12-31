@@ -41,7 +41,7 @@ impl Node {
 /// let bvh = wald::BVH::new(&triangles);
 /// ```
 pub struct BVH<'a> {
-    inner: cxx::UniquePtr<ffi::BVH>,
+    pub(crate) inner: cxx::UniquePtr<ffi::BVH>,
     _phantom: PhantomData<&'a [f32; 4]>,
 }
 
@@ -49,6 +49,10 @@ impl<'a> BVH<'a> {
     // Remove unused nodes and reduce the size of the BVH.
     pub fn compact(&mut self) {
         self.inner.pin_mut().Compact();
+    }
+
+    pub fn split_leaves(&mut self, max_primitives: u32) {
+        self.inner.pin_mut().SplitLeafs(max_primitives);
     }
 
     /// Number of primitives for a given node.

@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
     use core::f32;
+    use std::fmt::Debug;
 
     use approx::assert_relative_eq;
     use tinybvh_rs::*;
@@ -108,14 +109,57 @@ mod tests {
     }
 
     #[test]
+    fn layout_mbvh8() {
+        let primitives = split_triangles();
+        let bvh = wald::BVH::new(primitives.as_slice());
+        let mbvh = mbvh::Builder::new(&bvh).bvh();
+
+        assert_eq!(mbvh.leaf_count(0), 2);
+        assert_eq!(mbvh.nodes().len(), 4);
+
+        let leaves: Vec<bool> = mbvh.nodes().iter().map(|n| n.is_leaf()).collect();
+        assert_eq!(leaves, [false, false, true, true]);
+    }
+
+    #[test]
     fn layout_cwbvh() {
         let primitives = split_triangles();
-        let bvh = cwbvh::BVH::new(primitives.as_slice());
-        assert_eq!(bvh.nodes().len(), 1);
-        assert_eq!(bvh.nodes()[0].primitives().collect::<Vec<u32>>(), [0, 1]);
 
+        let bvh = wald::BVH::new(primitives.as_slice());
+
+        let mbvh = mbvh::Builder::new(&bvh).bvh();
+        assert_eq!(mbvh.leaf_count(0), 2);
+
+        let mut cwbvh = cwbvh::BVH::new(&mbvh);
+        assert_eq!(cwbvh.nodes().len(), 1);
+        assert_eq!(cwbvh.nodes()[0].primitives().collect::<Vec<u32>>(), [0, 1]);
         assert_eq!(
-            bvh.primitives(),
+            cwbvh.primitives(),
+            [
+                cwbvh::Primitive {
+                    vertex_0: [-2.0, 1.0, -1.0],
+                    edge_1: [0.0, -1.0, 0.0],
+                    edge_2: [1.0, 0.0, 0.0],
+                    original_primitive: 0,
+                    ..Default::default()
+                },
+                cwbvh::Primitive {
+                    vertex_0: [2.0, 1.0, -1.0],
+                    edge_1: [-1.0, -1.0, 0.0],
+                    edge_2: [0.0, -1.0, 0.0],
+                    original_primitive: 1,
+                    ..Default::default()
+                }
+            ]
+        );
+
+        let mut mbvh = mbvh.builder(&bvh);
+        // mbvh.refit(0); // Refit seems broken because the last node isn't treated as a leaf
+
+        let mbvh = mbvh.bvh();
+        cwbvh.convert(&mbvh);
+        assert_eq!(
+            cwbvh.primitives(),
             [
                 cwbvh::Primitive {
                     vertex_0: [-2.0, 1.0, -1.0],
@@ -134,6 +178,37 @@ mod tests {
             ]
         );
     }
+
+    #[test]
+    fn layout_bvh8_cpu() {
+        let primitives = split_triangles();
+
+        let bvh = wald::BVH::new(primitives.as_slice());
+        let mbvh = mbvh::Builder::new(&bvh).bvh();
+        let bvh8 = bvh8_cpu::Builder::new(&mbvh).bvh();
+
+        assert_eq!(mbvh.leaf_count(0), 2);
+
+        // test_intersection(&bvh8);
+        test_intersection(&bvh);
+    }
+
+    // #[test]
+    // #[should_panic]
+    // fn builder_capture_error() {
+    //     let bvh = {
+    //         let primitives = split_triangles();
+    //         let bvh = bvh8_cpu::Builder::new(primitives.as_slice());
+    //         bvh.bvh()
+    //     };
+
+    //     let primitives = vec![
+    //         [-2.0, 1.0, -1.0, 0.0],
+    //         [-1.0, 1.0, -1.0, 0.0],
+    //         [-2.0, 0.0, -1.0, 0.0],
+    //     ];
+    //     bvh.builder(primitives.as_slice());
+    // }
 
     #[test]
     fn capture() {

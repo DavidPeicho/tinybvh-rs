@@ -21,6 +21,30 @@ rust::Slice<const uint32_t> BVH_indices(const BVH& bvh) {
     return rust::Slice{const_cast<const uint32_t*>(bvh.primIdx), bvh.idxCount};
 }
 
+/** MBVH8 */
+
+std::unique_ptr<MBVH8> MBVH8_new() {
+    return std::make_unique<MBVH8>();
+}
+void MBVH8_setBVH(MBVH8& out, const BVH& bvh) {
+    out.bvh = bvh;
+}
+const uint8_t* MBVH8_nodes(const MBVH8& bvh) {
+    return reinterpret_cast<const uint8_t*>(bvh.mbvhNode);
+}
+uint32_t MBVH8_nodes_count(const MBVH8& bvh) {
+    return bvh.usedNodes;
+}
+
+/** BVH8_CPU */
+
+std::unique_ptr<BVH8_CPU> BVH8_CPU_new() {
+    return std::make_unique<BVH8_CPU>();
+}
+void BVH8_CPU_setBVH(BVH8_CPU& out, const MBVH8& bvh) {
+    out.bvh8 = bvh;
+}
+
 /** CWBVH */
 
 std::unique_ptr<BVH8_CWBVH> CWBVH_new() { return std::make_unique<BVH8_CWBVH>(); }

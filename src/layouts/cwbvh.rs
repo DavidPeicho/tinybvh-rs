@@ -1,4 +1,4 @@
-use crate::ffi;
+use crate::{ffi, mbvh};
 use std::{fmt::Debug, marker::PhantomData};
 
 pub struct PrimitiveIter {
@@ -115,12 +115,25 @@ impl Debug for Primitive {
 }
 
 /// CWBVH with node layout [`Node`].
-pub struct BVH<'a> {
+pub struct BVH {
     inner: cxx::UniquePtr<ffi::BVH8_CWBVH>,
-    _phantom: PhantomData<&'a [f32; 4]>,
 }
 
-impl<'a> BVH<'a> {
+impl BVH {
+    pub fn new(original: &mbvh::BVH) -> Self {
+        let mut bvh = BVH {
+            inner: ffi::CWBVH_new(),
+        };
+        bvh.convert(original);
+        bvh
+    }
+
+    pub fn convert(&mut self, original: &mbvh::BVH) {
+        self.inner
+            .pin_mut()
+            .ConvertFrom(original.inner.as_ref().unwrap(), true);
+    }
+
     pub fn nodes(&self) -> &[Node] {
         // TODO: Create CWBVH node in tinybvh to avoid that.
         let ptr = ffi::CWBVH_nodes(&self.inner) as *const Node;
@@ -138,12 +151,4 @@ impl<'a> BVH<'a> {
         let count = ffi::CWBVH_primitives_count(&self.inner);
         unsafe { std::slice::from_raw_parts(ptr, count as usize) }
     }
-
-    pub fn new_internal() -> Self {
-        Self {
-            inner: ffi::CWBVH_new(),
-            _phantom: PhantomData,
-        }
-    }
 }
-super::impl_bvh!(BVH, BVH8_CWBVH);

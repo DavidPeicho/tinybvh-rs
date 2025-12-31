@@ -19,6 +19,19 @@ std::unique_ptr<BVH> BVH_new();
 rust::Slice<const BVHNode> BVH_nodes(const BVH&);
 rust::Slice<const uint32_t> BVH_indices(const BVH&);
 
+/* MBVH8 */
+
+using MBVH8 = MBVH<8>;
+std::unique_ptr<MBVH8> MBVH8_new();
+void MBVH8_setBVH(MBVH8& out, const BVH& bvh);
+const uint8_t* MBVH8_nodes(const MBVH8&);
+uint32_t MBVH8_nodes_count(const MBVH8&);
+
+/* BVH8_CPU */
+
+std::unique_ptr<BVH8_CPU> BVH8_CPU_new();
+void BVH8_CPU_setBVH(BVH8_CPU& out, const MBVH8& bvh);
+
 /* CWBVH */
 
 struct NodeCWBVH; // TODO: Remove once tinybvh provides a struct for CWBVH node.
