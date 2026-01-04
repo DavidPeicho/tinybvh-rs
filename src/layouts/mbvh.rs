@@ -1,3 +1,5 @@
+use std::ops::Deref;
+
 use crate::{cxx_ffi, ffi, wald};
 
 #[repr(C)]
@@ -28,8 +30,8 @@ impl BVH {
         self.inner.LeafCount(node_index)
     }
 
-    pub fn builder<'a>(mut self, original: &'a wald::BVH<'a>) -> Builder<'a> {
-        ffi::MBVH8_setBVH(self.inner.pin_mut(), &original.inner);
+    pub fn builder<'a>(mut self, original: &'a wald::Builder<'a>) -> Builder<'a> {
+        ffi::MBVH8_setBVH(self.inner.pin_mut(), &original.bvh.inner);
         Builder {
             bvh: self,
             original,
@@ -46,11 +48,19 @@ impl BVH {
 
 pub struct Builder<'a> {
     bvh: BVH,
-    original: &'a wald::BVH<'a>,
+    original: &'a wald::Builder<'a>,
+}
+
+impl<'a> Deref for Builder<'a> {
+    type Target = BVH;
+
+    fn deref(&self) -> &Self::Target {
+        &self.bvh
+    }
 }
 
 impl<'a> Builder<'a> {
-    pub fn new(original: &'a wald::BVH) -> Self {
+    pub fn new(original: &'a wald::Builder) -> Self {
         let mbvh = BVH {
             inner: ffi::MBVH8_new(),
         };
@@ -67,7 +77,7 @@ impl<'a> Builder<'a> {
         self.bvh
             .inner
             .pin_mut()
-            .ConvertFrom(self.original.inner.as_ref().unwrap(), true);
+            .ConvertFrom(self.original.bvh.inner.as_ref().unwrap(), true);
     }
 
     pub fn bvh(self) -> BVH {

@@ -13,12 +13,17 @@ Ray ray_new(const std::array<float, 3>& origin, const std::array<float, 3>& dir)
 
 /** Wald BVH */
 
-std::unique_ptr<BVH> BVH_new() { return std::make_unique<BVH>(); }
+std::unique_ptr<BVH> BVH_new() {
+    return std::make_unique<BVH>();
+}
+void BVH_setPrimitives(BVH& out, const bvhvec4slice& primitives) {
+    out.verts = primitives;
+}
 rust::Slice<const BVHNode> BVH_nodes(const BVH& bvh) {
     return rust::Slice{const_cast<const BVHNode*>(bvh.bvhNode), bvh.usedNodes};
 }
 rust::Slice<const uint32_t> BVH_indices(const BVH& bvh) {
-    return rust::Slice{const_cast<const uint32_t*>(bvh.primIdx), bvh.idxCount};
+    return rust::Slice{const_cast<const uint32_t*>(bvh.primIdx), bvh.triCount};
 }
 
 /** MBVH8 */

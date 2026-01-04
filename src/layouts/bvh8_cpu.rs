@@ -14,7 +14,7 @@ impl BVH {
     }
 }
 
-// TODO: Only with AVX2
+#[cfg(target_feature = "avx2")]
 impl crate::Intersector for BVH {
     fn intersect(&self, ray: &mut crate::Ray) -> u32 {
         self.inner.Intersect(ray) as u32

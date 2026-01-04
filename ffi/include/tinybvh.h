@@ -16,6 +16,7 @@ Ray ray_new(const std::array<float, 3>& origin, const std::array<float, 3>& dir)
 
 using BVHNode = BVH::BVHNode;
 std::unique_ptr<BVH> BVH_new();
+void BVH_setPrimitives(BVH& out, const bvhvec4slice& primitives);
 rust::Slice<const BVHNode> BVH_nodes(const BVH&);
 rust::Slice<const uint32_t> BVH_indices(const BVH&);
 

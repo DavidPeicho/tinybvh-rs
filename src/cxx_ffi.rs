@@ -53,6 +53,7 @@ pub(crate) mod ffi {
         pub fn BVH_new() -> UniquePtr<BVH>;
         pub fn BVH_nodes(bvh: &BVH) -> &[BVHNode];
         pub fn BVH_indices(bvh: &BVH) -> &[u32];
+        pub fn BVH_setPrimitives(out: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn Build(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn BuildHQ(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn Compact(self: Pin<&mut BVH>);

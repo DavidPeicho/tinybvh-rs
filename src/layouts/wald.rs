@@ -1,5 +1,5 @@
 use crate::ffi;
-use std::{fmt::Debug, marker::PhantomData};
+use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
 /// "Traditional" 32-bytes BVH node layout, as proposed by Ingo Wald.
 ///
@@ -40,19 +40,18 @@ impl Node {
 /// ];
 /// let bvh = wald::BVH::new(&triangles);
 /// ```
-pub struct BVH<'a> {
+pub struct BVH {
     pub(crate) inner: cxx::UniquePtr<ffi::BVH>,
-    _phantom: PhantomData<&'a [f32; 4]>,
 }
 
-impl<'a> BVH<'a> {
-    // Remove unused nodes and reduce the size of the BVH.
-    pub fn compact(&mut self) {
-        self.inner.pin_mut().Compact();
-    }
-
-    pub fn split_leaves(&mut self, max_primitives: u32) {
-        self.inner.pin_mut().SplitLeafs(max_primitives);
+impl BVH {
+    pub fn builder<'a>(mut self, primitives: crate::Positions<'a>) -> Builder<'a> {
+        let slice = primitives.into();
+        ffi::BVH_setPrimitives(self.inner.pin_mut(), &slice);
+        Builder {
+            bvh: self,
+            _phantom: PhantomData,
+        }
     }
 
     /// Number of primitives for a given node.
@@ -92,18 +91,70 @@ impl<'a> BVH<'a> {
     pub fn indices(&self) -> &[u32] {
         ffi::BVH_indices(&self.inner)
     }
+}
 
-    pub fn new_internal() -> Self {
-        Self {
-            inner: ffi::BVH_new(),
-            _phantom: PhantomData,
-        }
+pub struct Builder<'a> {
+    pub(crate) bvh: BVH,
+    _phantom: PhantomData<&'a [f32; 4]>,
+}
+
+impl<'a> Deref for Builder<'a> {
+    type Target = BVH;
+
+    fn deref(&self) -> &Self::Target {
+        &self.bvh
     }
 }
-super::impl_bvh!(BVH, BVH);
 
-impl crate::Intersector for BVH<'_> {
+impl<'a> Builder<'a> {
+    pub fn new(primitives: crate::Positions<'a>) -> Self {
+        let bvh = BVH {
+            inner: ffi::BVH_new(),
+        };
+        bvh.builder(primitives).build(primitives)
+    }
+
+    pub fn new_hq(primitives: crate::Positions<'a>) -> Self {
+        let bvh = BVH {
+            inner: ffi::BVH_new(),
+        };
+        bvh.builder(primitives).build_hq(primitives)
+    }
+
+    pub fn build(mut self, primitives: crate::Positions<'a>) -> Self {
+        if primitives.len() % 3 != 0 {
+            panic!("primitives slice must triangulated (size multiple of 3)")
+        }
+        let slice = primitives.into();
+        self.bvh.inner.pin_mut().Build(&slice);
+        self.bvh.builder(primitives)
+    }
+
+    pub fn build_hq(mut self, primitives: crate::Positions<'a>) -> Self {
+        if primitives.len() % 3 != 0 {
+            panic!("primitives slice must triangulated (size multiple of 3)")
+        }
+        let slice = primitives.into();
+        self.bvh.inner.pin_mut().BuildHQ(&slice);
+        self.bvh.builder(primitives)
+    }
+
+    // Remove unused nodes and reduce the size of the BVH.
+    pub fn compact(&mut self) {
+        self.bvh.inner.pin_mut().Compact();
+    }
+
+    pub fn split_leaves(&mut self, max_primitives: u32) {
+        self.bvh.inner.pin_mut().SplitLeafs(max_primitives);
+    }
+
+    pub fn bvh(self) -> BVH {
+        self.bvh
+    }
+}
+
+impl crate::Intersector for Builder<'_> {
     fn intersect(&self, ray: &mut crate::Ray) -> u32 {
-        self.inner.Intersect(ray) as u32
+        self.bvh.inner.Intersect(ray) as u32
     }
 }

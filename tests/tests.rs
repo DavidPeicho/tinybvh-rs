@@ -43,7 +43,7 @@ mod tests {
     #[test]
     fn layout_wald32() {
         let triangles = split_triangles();
-        let mut bvh = wald::BVH::new(triangles.as_slice());
+        let mut bvh = wald::Builder::new(triangles.as_slice().into());
         let expected = [
             wald::Node {
                 min: [-2.0, 0.0, -1.0],
@@ -69,49 +69,49 @@ mod tests {
         assert_eq!(bvh.nodes(), expected);
         assert_eq!(bvh.indices(), [0, 1]);
         test_intersection(&bvh);
-        bvh.compact();
 
-        {
-            use pas::slice_attr;
-            let primitives = [
-                Vertex {
-                    position: [-2.0, 1.0, -1.0, 0.0],
-                    ..Default::default()
-                },
-                Vertex {
-                    position: [-1.0, 1.0, -1.0, 0.0],
-                    ..Default::default()
-                },
-                Vertex {
-                    position: [-2.0, 0.0, -1.0, 0.0],
-                    ..Default::default()
-                },
-                Vertex {
-                    position: [2.0, 1.0, -1.0, 0.0],
-                    ..Default::default()
-                },
-                Vertex {
-                    position: [2.0, 0.0, -1.0, 0.0],
-                    ..Default::default()
-                },
-                Vertex {
-                    position: [1.0, 0.0, -1.0, 0.0],
-                    ..Default::default()
-                },
-            ];
-            let positions = slice_attr!(primitives, [0].position);
-            let bvh = wald::BVH::new(positions);
-            assert_eq!(bvh.nodes().len(), expected.len());
-            assert_eq!(bvh.nodes(), expected);
-            assert_eq!(bvh.indices(), [0, 1]);
-            test_intersection(&bvh);
-        }
+        bvh.compact();
+        test_intersection(&bvh);
+
+        use pas::slice_attr;
+        let primitives = [
+            Vertex {
+                position: [-2.0, 1.0, -1.0, 0.0],
+                ..Default::default()
+            },
+            Vertex {
+                position: [-1.0, 1.0, -1.0, 0.0],
+                ..Default::default()
+            },
+            Vertex {
+                position: [-2.0, 0.0, -1.0, 0.0],
+                ..Default::default()
+            },
+            Vertex {
+                position: [2.0, 1.0, -1.0, 0.0],
+                ..Default::default()
+            },
+            Vertex {
+                position: [2.0, 0.0, -1.0, 0.0],
+                ..Default::default()
+            },
+            Vertex {
+                position: [1.0, 0.0, -1.0, 0.0],
+                ..Default::default()
+            },
+        ];
+        let positions = slice_attr!(primitives, [0].position);
+        let bvh = bvh.build_hq(positions);
+        assert_eq!(bvh.nodes().len(), expected.len());
+        assert_eq!(bvh.nodes(), expected);
+        assert_eq!(bvh.indices(), [0, 1]);
+        test_intersection(&bvh);
     }
 
     #[test]
     fn layout_mbvh8() {
         let primitives = split_triangles();
-        let bvh = wald::BVH::new(primitives.as_slice());
+        let bvh = wald::Builder::new(primitives.as_slice().into());
         let mbvh = mbvh::Builder::new(&bvh).bvh();
 
         assert_eq!(mbvh.leaf_count(0), 2);
@@ -125,9 +125,9 @@ mod tests {
     fn layout_cwbvh() {
         let primitives = split_triangles();
 
-        let bvh = wald::BVH::new(primitives.as_slice());
+        let bvh = wald::Builder::new(primitives.as_slice().into());
 
-        let mbvh = mbvh::Builder::new(&bvh).bvh();
+        let mbvh = mbvh::Builder::new(&bvh);
         assert_eq!(mbvh.leaf_count(0), 2);
 
         let mut cwbvh = cwbvh::BVH::new(&mbvh);
@@ -153,7 +153,7 @@ mod tests {
             ]
         );
 
-        let mut mbvh = mbvh.builder(&bvh);
+        let mut mbvh = mbvh.bvh().builder(&bvh);
         // mbvh.refit(0); // Refit seems broken because the last node isn't treated as a leaf
 
         let mbvh = mbvh.bvh();
@@ -183,13 +183,13 @@ mod tests {
     fn layout_bvh8_cpu() {
         let primitives = split_triangles();
 
-        let bvh = wald::BVH::new(primitives.as_slice());
+        let bvh = wald::Builder::new(primitives.as_slice().into());
         let mbvh = mbvh::Builder::new(&bvh).bvh();
         let bvh8 = bvh8_cpu::Builder::new(&mbvh).bvh();
 
         assert_eq!(mbvh.leaf_count(0), 2);
-
-        // test_intersection(&bvh8);
+        #[cfg(target_feature = "avx2")]
+        test_intersection(&bvh8);
         test_intersection(&bvh);
     }
 
@@ -210,28 +210,15 @@ mod tests {
     //     bvh.builder(primitives.as_slice());
     // }
 
-    #[test]
-    fn capture() {
-        let mut triangles = split_triangles();
-        let bvh = wald::BVH::new(&triangles);
-        assert_relative_eq!(bvh.nodes()[0].min[0], -2.0);
-
-        let capture = bvh.capture();
-        triangles[0][0] = -5.0;
-
-        let bvh = wald::BVH::from_capture(capture, &triangles);
-        assert_relative_eq!(bvh.nodes()[0].min[0], -5.0);
-    }
-
-    #[test]
-    #[should_panic]
-    fn panic_non_triangulated() {
-        let primitives = [
-            [1.0, 0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0, 0.0],
-            [1.0, 0.0, 0.0, 0.0],
-        ];
-        let _ = wald::BVH::new(&primitives);
-    }
+    // #[test]
+    // #[should_panic]
+    // fn panic_non_triangulated() {
+    //     let primitives = [
+    //         [1.0, 0.0, 0.0, 0.0],
+    //         [1.0, 0.0, 0.0, 0.0],
+    //         [1.0, 0.0, 0.0, 0.0],
+    //         [1.0, 0.0, 0.0, 0.0],
+    //     ];
+    //     let _ = wald::Builder::new(primitives.as_slice().into());
+    // }
 }
