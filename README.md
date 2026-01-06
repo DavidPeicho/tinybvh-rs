@@ -77,3 +77,13 @@ let vertices = [
 let positions = pas::slice_attr!(vertices, [0].position);
 let bvh = wald::BVH::new(positions);
 ```
+
+## Contributing
+
+### Tests
+
+Run tests with SIMD support:
+
+```sh
+RUSTFLAGS='-C target-feature=avx2' cargo test
+```
