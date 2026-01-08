@@ -6,14 +6,15 @@ mod tests {
     use approx::assert_relative_eq;
     use tinybvh_rs::*;
 
-    fn split_triangles() -> Vec<[f32; 4]> {
+    fn split_triangles(scale: f32) -> Vec<[f32; 4]> {
+        let double = 2.0 * scale;
         vec![
-            [-2.0, 1.0, -1.0, 0.0],
-            [-1.0, 1.0, -1.0, 0.0],
-            [-2.0, 0.0, -1.0, 0.0],
-            [2.0, 1.0, -1.0, 0.0],
-            [2.0, 0.0, -1.0, 0.0],
-            [1.0, 0.0, -1.0, 0.0],
+            [-double, scale, -scale, 0.0],
+            [-scale, scale, -scale, 0.0],
+            [-double, 0.0, -scale, 0.0],
+            [double, scale, -scale, 0.0],
+            [double, 0.0, -scale, 0.0],
+            [scale, 0.0, -scale, 0.0],
         ]
     }
 
@@ -42,7 +43,7 @@ mod tests {
     }
     #[test]
     fn layout_wald32() {
-        let triangles = split_triangles();
+        let triangles = split_triangles(1.0);
         let mut bvh = wald::Builder::new(triangles.as_slice().into());
         let expected = [
             wald::Node {
@@ -110,7 +111,7 @@ mod tests {
 
     #[test]
     fn layout_mbvh8() {
-        let primitives = split_triangles();
+        let primitives = split_triangles(1.0);
         let bvh = wald::Builder::new(primitives.as_slice().into());
         let mbvh = mbvh::Builder::new(&bvh).bvh();
 
@@ -119,12 +120,13 @@ mod tests {
 
         let leaves: Vec<bool> = mbvh.nodes().iter().map(|n| n.is_leaf()).collect();
         assert_eq!(leaves, [false, false, true, true]);
+
+        // mbvh.refit(0); // Refit seems broken because the last node isn't treated as a leaf
     }
 
     #[test]
     fn layout_cwbvh() {
-        let primitives = split_triangles();
-
+        let primitives = split_triangles(1.0);
         let bvh = wald::Builder::new(primitives.as_slice().into());
 
         let mbvh = mbvh::Builder::new(&bvh);
@@ -153,8 +155,11 @@ mod tests {
             ]
         );
 
-        let mut mbvh = mbvh.bvh().builder(&bvh);
-        // mbvh.refit(0); // Refit seems broken because the last node isn't treated as a leaf
+        // Update mbvh's original
+
+        let other_positions = split_triangles(2.0);
+        let bvh: wald::Builder<'_> = wald::Builder::new(other_positions.as_slice().into());
+        let mbvh: mbvh::Builder<'_> = mbvh.bvh().convert(&bvh);
 
         let mbvh = mbvh.bvh();
         cwbvh.convert(&mbvh);
@@ -162,16 +167,43 @@ mod tests {
             cwbvh.primitives(),
             [
                 cwbvh::Primitive {
-                    vertex_0: [-2.0, 1.0, -1.0],
-                    edge_1: [0.0, -1.0, 0.0],
-                    edge_2: [1.0, 0.0, 0.0],
+                    vertex_0: [-4.0, 2.0, -2.0],
+                    edge_1: [0.0, -2.0, 0.0],
+                    edge_2: [2.0, 0.0, 0.0],
                     original_primitive: 0,
                     ..Default::default()
                 },
                 cwbvh::Primitive {
-                    vertex_0: [2.0, 1.0, -1.0],
-                    edge_1: [-1.0, -1.0, 0.0],
-                    edge_2: [0.0, -1.0, 0.0],
+                    vertex_0: [4.0, 2.0, -2.0],
+                    edge_1: [-2.0, -2.0, 0.0],
+                    edge_2: [0.0, -2.0, 0.0],
+                    original_primitive: 1,
+                    ..Default::default()
+                }
+            ]
+        );
+
+        // Update vertices only
+
+        let bvh = bvh.bvh();
+        let other_positions: Vec<[f32; 4]> = split_triangles(3.0);
+        let bvh = bvh.builder(other_positions.as_slice().into());
+        let mbvh = mbvh.builder(&bvh);
+        cwbvh.convert(&mbvh);
+        assert_eq!(
+            cwbvh.primitives(),
+            [
+                cwbvh::Primitive {
+                    vertex_0: [-6.0, 3.0, -3.0],
+                    edge_1: [0.0, -3.0, 0.0],
+                    edge_2: [3.0, 0.0, 0.0],
+                    original_primitive: 0,
+                    ..Default::default()
+                },
+                cwbvh::Primitive {
+                    vertex_0: [6.0, 3.0, -3.0],
+                    edge_1: [-3.0, -3.0, 0.0],
+                    edge_2: [0.0, -3.0, 0.0],
                     original_primitive: 1,
                     ..Default::default()
                 }
@@ -181,15 +213,17 @@ mod tests {
 
     #[test]
     fn layout_bvh8_cpu() {
-        let primitives = split_triangles();
+        let primitives = split_triangles(1.0);
 
         let bvh = wald::Builder::new(primitives.as_slice().into());
         let mbvh = mbvh::Builder::new(&bvh).bvh();
-        let bvh8 = bvh8_cpu::Builder::new(&mbvh).bvh();
-
         assert_eq!(mbvh.leaf_count(0), 2);
+
         #[cfg(target_feature = "avx2")]
-        test_intersection(&bvh8);
+        {
+            let bvh8 = bvh8_cpu::Builder::new(&mbvh).bvh();
+            test_intersection(&bvh8);
+        }
         test_intersection(&bvh);
     }
 

@@ -38,6 +38,15 @@ impl BVH {
         }
     }
 
+    pub fn convert<'a>(mut self, original: &'a wald::Builder<'a>) -> Builder<'a> {
+        let mut builder = Builder {
+            bvh: self,
+            original,
+        };
+        builder.convert();
+        builder
+    }
+
     pub fn nodes(&self) -> &[Node] {
         // TODO: Create CWBVH node in tinybvh to avoid that.
         let ptr = ffi::MBVH8_nodes(&self.inner) as *const Node;
