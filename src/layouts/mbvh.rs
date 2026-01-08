@@ -5,13 +5,13 @@ use crate::{cxx_ffi, ffi, wald};
 #[repr(C)]
 #[derive(Clone, Copy, Default, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Node {
-    aabb_min: [f32; 3],
-    first_tri: u32,
-    aabb_max: [f32; 3],
-    tri_count: u32,
-    child: [u32; 8],
-    child_count: u32,
-    dummy: [u32; ((30 - 8) & 3) + 1],
+    pub aabb_min: [f32; 3],
+    pub first_tri: u32,
+    pub aabb_max: [f32; 3],
+    pub tri_count: u32,
+    pub child: [u32; 8],
+    pub child_count: u32,
+    pub dummy: [u32; ((30 - 8) & 3) + 1],
 }
 
 impl Node {
@@ -21,25 +21,25 @@ impl Node {
     }
 }
 
-pub struct BVH {
+pub struct BVHData {
     pub(crate) inner: cxx::UniquePtr<ffi::MBVH8>,
 }
 
-impl BVH {
+impl BVHData {
     pub fn leaf_count(&self, node_index: u32) -> u32 {
         self.inner.LeafCount(node_index)
     }
 
-    pub fn builder<'a>(mut self, original: &'a wald::Builder<'a>) -> Builder<'a> {
+    pub fn builder<'a>(mut self, original: &'a wald::BVH<'a>) -> BVH<'a> {
         ffi::MBVH8_setBVH(self.inner.pin_mut(), &original.bvh.inner);
-        Builder {
+        BVH {
             bvh: self,
             original,
         }
     }
 
-    pub fn convert<'a>(mut self, original: &'a wald::Builder<'a>) -> Builder<'a> {
-        let mut builder = Builder {
+    pub fn convert<'a>(mut self, original: &'a wald::BVH<'a>) -> BVH<'a> {
+        let mut builder = BVH {
             bvh: self,
             original,
         };
@@ -48,29 +48,26 @@ impl BVH {
     }
 
     pub fn nodes(&self) -> &[Node] {
-        // TODO: Create CWBVH node in tinybvh to avoid that.
-        let ptr = ffi::MBVH8_nodes(&self.inner) as *const Node;
-        let count = ffi::MBVH8_nodes_count(&self.inner);
-        unsafe { std::slice::from_raw_parts(ptr, count as usize) }
+        ffi::MBVH8_nodes(&self.inner)
     }
 }
 
-pub struct Builder<'a> {
-    bvh: BVH,
-    original: &'a wald::Builder<'a>,
+pub struct BVH<'a> {
+    bvh: BVHData,
+    original: &'a wald::BVH<'a>,
 }
 
-impl<'a> Deref for Builder<'a> {
-    type Target = BVH;
+impl<'a> Deref for BVH<'a> {
+    type Target = BVHData;
 
     fn deref(&self) -> &Self::Target {
         &self.bvh
     }
 }
 
-impl<'a> Builder<'a> {
-    pub fn new(original: &'a wald::Builder) -> Self {
-        let mbvh = BVH {
+impl<'a> BVH<'a> {
+    pub fn new(original: &'a wald::BVH) -> Self {
+        let mbvh = BVHData {
             inner: ffi::MBVH8_new(),
         };
         let mut builder = mbvh.builder(original);
@@ -89,7 +86,7 @@ impl<'a> Builder<'a> {
             .ConvertFrom(self.original.bvh.inner.as_ref().unwrap(), true);
     }
 
-    pub fn bvh(self) -> BVH {
+    pub fn data(self) -> BVHData {
         self.bvh
     }
 }

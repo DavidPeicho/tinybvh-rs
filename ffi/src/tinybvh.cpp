@@ -34,11 +34,8 @@ std::unique_ptr<MBVH8> MBVH8_new() {
 void MBVH8_setBVH(MBVH8& out, const BVH& bvh) {
     out.bvh = bvh;
 }
-const uint8_t* MBVH8_nodes(const MBVH8& bvh) {
-    return reinterpret_cast<const uint8_t*>(bvh.mbvhNode);
-}
-uint32_t MBVH8_nodes_count(const MBVH8& bvh) {
-    return bvh.usedNodes;
+rust::Slice<const MBVH8Node> MBVH8_nodes(const MBVH8& bvh) {
+    return rust::Slice{const_cast<const MBVH8Node*>(bvh.mbvhNode), bvh.usedNodes};
 }
 
 /** BVH8_CPU */

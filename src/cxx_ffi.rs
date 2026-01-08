@@ -36,6 +36,10 @@ unsafe impl cxx::ExternType for crate::wald::Node {
     type Id = cxx::type_id!("tinybvh::BVHNode");
     type Kind = cxx::kind::Trivial;
 }
+unsafe impl cxx::ExternType for crate::mbvh::Node {
+    type Id = cxx::type_id!("tinybvh::MBVH8Node");
+    type Kind = cxx::kind::Trivial;
+}
 
 #[cxx::bridge(namespace = "tinybvh")]
 pub(crate) mod ffi {
@@ -64,13 +68,13 @@ pub(crate) mod ffi {
 
         // MBVH8
         pub type MBVH8;
+        pub type MBVH8Node = crate::mbvh::Node;
         pub fn MBVH8_new() -> UniquePtr<MBVH8>;
         pub fn MBVH8_setBVH(out: Pin<&mut MBVH8>, bvh: &BVH);
+        pub fn MBVH8_nodes(bvh: &MBVH8) -> &[MBVH8Node];
         pub fn ConvertFrom(self: Pin<&mut MBVH8>, bvh: &BVH, compact: bool);
         pub fn Refit(self: Pin<&mut MBVH8>, node_index: u32);
         pub fn LeafCount(self: &MBVH8, node_index: u32) -> u32;
-        pub fn MBVH8_nodes(bvh: &MBVH8) -> *const u8;
-        pub fn MBVH8_nodes_count(bvh: &MBVH8) -> u32;
 
         // BVH8_CPU
         pub type BVH8_CPU;

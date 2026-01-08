@@ -1,13 +1,13 @@
 use crate::{cxx_ffi, ffi, mbvh, wald};
 
-pub struct BVH {
+pub struct BVHData {
     pub(crate) inner: cxx::UniquePtr<ffi::BVH8_CPU>,
 }
 
-impl BVH {
-    pub fn builder(mut self, original: &mbvh::BVH) -> Builder {
+impl BVHData {
+    pub fn builder(mut self, original: &mbvh::BVHData) -> BVH {
         ffi::BVH8_CPU_setBVH(self.inner.pin_mut(), &original.inner);
-        Builder {
+        BVH {
             bvh: self,
             original,
         }
@@ -15,20 +15,20 @@ impl BVH {
 }
 
 #[cfg(target_feature = "avx2")]
-impl crate::Intersector for BVH {
+impl crate::Intersector for BVHData {
     fn intersect(&self, ray: &mut crate::Ray) -> u32 {
         self.inner.Intersect(ray) as u32
     }
 }
 
-pub struct Builder<'a> {
-    bvh: BVH,
-    original: &'a mbvh::BVH,
+pub struct BVH<'a> {
+    bvh: BVHData,
+    original: &'a mbvh::BVHData,
 }
 
-impl<'a> Builder<'a> {
-    pub fn new(original: &'a mbvh::BVH) -> Self {
-        let bvh = BVH {
+impl<'a> BVH<'a> {
+    pub fn new(original: &'a mbvh::BVHData) -> Self {
+        let bvh = BVHData {
             inner: ffi::BVH8_CPU_new(),
         };
         let mut builder = bvh.builder(original);
@@ -43,7 +43,7 @@ impl<'a> Builder<'a> {
             .ConvertFrom(self.original.inner.as_ref().unwrap());
     }
 
-    pub fn bvh(self) -> BVH {
+    pub fn data(self) -> BVHData {
         self.bvh
     }
 }

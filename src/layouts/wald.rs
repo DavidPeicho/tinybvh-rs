@@ -40,15 +40,15 @@ impl Node {
 /// ];
 /// let bvh = wald::BVH::new(&triangles);
 /// ```
-pub struct BVH {
+pub struct BVHData {
     pub(crate) inner: cxx::UniquePtr<ffi::BVH>,
 }
 
-impl BVH {
-    pub fn builder<'a>(mut self, primitives: crate::Positions<'a>) -> Builder<'a> {
+impl BVHData {
+    pub fn builder<'a>(mut self, primitives: crate::Positions<'a>) -> BVH<'a> {
         let slice = primitives.into();
         ffi::BVH_setPrimitives(self.inner.pin_mut(), &slice);
-        Builder {
+        BVH {
             bvh: self,
             _phantom: PhantomData,
         }
@@ -93,29 +93,29 @@ impl BVH {
     }
 }
 
-pub struct Builder<'a> {
-    pub(crate) bvh: BVH,
+pub struct BVH<'a> {
+    pub(crate) bvh: BVHData,
     _phantom: PhantomData<&'a [f32; 4]>,
 }
 
-impl<'a> Deref for Builder<'a> {
-    type Target = BVH;
+impl<'a> Deref for BVH<'a> {
+    type Target = BVHData;
 
     fn deref(&self) -> &Self::Target {
         &self.bvh
     }
 }
 
-impl<'a> Builder<'a> {
+impl<'a> BVH<'a> {
     pub fn new(primitives: crate::Positions<'a>) -> Self {
-        let bvh = BVH {
+        let bvh = BVHData {
             inner: ffi::BVH_new(),
         };
         bvh.builder(primitives).build(primitives)
     }
 
     pub fn new_hq(primitives: crate::Positions<'a>) -> Self {
-        let bvh = BVH {
+        let bvh = BVHData {
             inner: ffi::BVH_new(),
         };
         bvh.builder(primitives).build_hq(primitives)
@@ -148,12 +148,12 @@ impl<'a> Builder<'a> {
         self.bvh.inner.pin_mut().SplitLeafs(max_primitives);
     }
 
-    pub fn bvh(self) -> BVH {
+    pub fn data(self) -> BVHData {
         self.bvh
     }
 }
 
-impl crate::Intersector for Builder<'_> {
+impl crate::Intersector for BVH<'_> {
     fn intersect(&self, ray: &mut crate::Ray) -> u32 {
         self.bvh.inner.Intersect(ray) as u32
     }
