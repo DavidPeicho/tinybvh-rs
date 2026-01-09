@@ -24,6 +24,8 @@ rust::Slice<const uint32_t> BVH_indices(const BVH&);
 
 using MBVH8 = MBVH<8>;
 using MBVH8Node = MBVH<8>::MBVHNode;
+template class MBVH<8>;
+
 std::unique_ptr<MBVH8> MBVH8_new();
 void MBVH8_setBVH(MBVH8& out, const BVH& bvh);
 rust::Slice<const MBVH8Node> MBVH8_nodes(const MBVH8&);
