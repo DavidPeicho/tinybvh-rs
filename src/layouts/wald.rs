@@ -42,6 +42,7 @@ impl Node {
 /// ```
 pub struct BVHData {
     pub(crate) inner: cxx::UniquePtr<ffi::BVH>,
+    pub(crate) max_primitives_per_leaf: Option<u32>,
 }
 
 impl BVHData {
@@ -110,15 +111,17 @@ impl<'a> BVH<'a> {
     pub fn new(primitives: crate::Positions<'a>) -> Self {
         let bvh = BVHData {
             inner: ffi::BVH_new(),
+            max_primitives_per_leaf: None,
         };
         bvh.builder(primitives).build(primitives)
     }
 
     pub fn new_hq(primitives: crate::Positions<'a>) -> Self {
-        let bvh = BVHData {
+        let data = BVHData {
             inner: ffi::BVH_new(),
+            max_primitives_per_leaf: None,
         };
-        bvh.builder(primitives).build_hq(primitives)
+        data.builder(primitives).build_hq(primitives)
     }
 
     pub fn build(mut self, primitives: crate::Positions<'a>) -> Self {
@@ -127,7 +130,8 @@ impl<'a> BVH<'a> {
         }
         let slice = primitives.into();
         self.bvh.inner.pin_mut().Build(&slice);
-        self.bvh.builder(primitives)
+        self.bvh.max_primitives_per_leaf = None;
+        self
     }
 
     pub fn build_hq(mut self, primitives: crate::Positions<'a>) -> Self {
@@ -136,7 +140,8 @@ impl<'a> BVH<'a> {
         }
         let slice = primitives.into();
         self.bvh.inner.pin_mut().BuildHQ(&slice);
-        self.bvh.builder(primitives)
+        self.bvh.max_primitives_per_leaf = None;
+        self
     }
 
     // Remove unused nodes and reduce the size of the BVH.
@@ -146,6 +151,9 @@ impl<'a> BVH<'a> {
 
     pub fn split_leaves(&mut self, max_primitives: u32) {
         self.bvh.inner.pin_mut().SplitLeafs(max_primitives);
+
+        let max_prim = self.bvh.max_primitives_per_leaf.unwrap_or(u32::MAX);
+        self.bvh.max_primitives_per_leaf = Some(u32::min(max_prim, max_primitives));
     }
 
     pub fn data(self) -> BVHData {

@@ -23,6 +23,7 @@ impl Node {
 
 pub struct BVHData {
     pub(crate) inner: cxx::UniquePtr<ffi::MBVH8>,
+    pub(crate) max_primitives_per_leaf: Option<u32>,
 }
 
 impl BVHData {
@@ -69,6 +70,7 @@ impl<'a> BVH<'a> {
     pub fn new(original: &'a wald::BVH) -> Self {
         let mbvh = BVHData {
             inner: ffi::MBVH8_new(),
+            max_primitives_per_leaf: None,
         };
         let mut builder = mbvh.builder(original);
         builder.convert();
@@ -84,6 +86,7 @@ impl<'a> BVH<'a> {
             .inner
             .pin_mut()
             .ConvertFrom(self.original.bvh.inner.as_ref().unwrap(), true);
+        self.bvh.max_primitives_per_leaf = self.original.max_primitives_per_leaf;
     }
 
     pub fn data(self) -> BVHData {

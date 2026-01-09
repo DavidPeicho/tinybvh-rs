@@ -149,19 +149,19 @@ mod tests {
         let mut mbvh = mbvh.builder(&bvh);
         mbvh.refit(0);
 
-        // MBVH<T>::Refit is broken in tinybvh
-        // assert_eq!(mbvh.nodes()[0].aabb_min, [-20.0, 0.0, -10.0]);
-        // assert_eq!(mbvh.nodes()[0].aabb_max, [20.0, 10.0, -10.0]);
+        assert_eq!(mbvh.nodes()[0].aabb_min, [-20.0, 0.0, -1.0]);
+        assert_eq!(mbvh.nodes()[0].aabb_max, [20.0, 10.0, -1.0]);
     }
 
     #[test]
     fn layout_cwbvh() {
         let primitives = split_triangles(1.0);
 
-        let bvh = wald::BVH::new(primitives.as_slice().into());
+        let mut bvh = wald::BVH::new(primitives.as_slice().into());
+        bvh.split_leaves(3);
         let mbvh = mbvh::BVH::new(&bvh);
 
-        let mut cwbvh = cwbvh::BVH::new(&mbvh);
+        let mut cwbvh = cwbvh::BVH::new(&mbvh).unwrap();
         assert_eq!(cwbvh.nodes().len(), 1);
         assert_eq!(cwbvh.nodes()[0].primitives().collect::<Vec<u32>>(), [0, 1]);
         assert_eq!(
@@ -187,7 +187,8 @@ mod tests {
         // Update mbvh
 
         let other_positions = split_triangles(2.0);
-        let bvh: wald::BVH<'_> = wald::BVH::new(other_positions.as_slice().into());
+        let mut bvh: wald::BVH<'_> = wald::BVH::new(other_positions.as_slice().into());
+        bvh.split_leaves(3);
         let mbvh: mbvh::BVH<'_> = mbvh.data().convert(&bvh);
         cwbvh.convert(&mbvh);
         assert_eq!(
