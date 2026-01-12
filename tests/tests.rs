@@ -44,7 +44,7 @@ mod tests {
     #[test]
     fn layout_wald32() {
         let triangles = split_triangles(1.0);
-        let mut bvh = wald::BVH::new(triangles.as_slice().into());
+        let mut bvh = wald::BVH::new(triangles.as_slice().into()).unwrap();
         let expected = [
             wald::Node {
                 min: [-2.0, 0.0, -1.0],
@@ -102,7 +102,7 @@ mod tests {
             },
         ];
         let positions = slice_attr!(primitives, [0].position);
-        let bvh = bvh.build_hq(positions);
+        let bvh = bvh.build_hq(positions).unwrap();
         assert_eq!(bvh.nodes().len(), expected.len());
         assert_eq!(bvh.nodes(), expected);
         assert_eq!(bvh.indices(), [0, 1]);
@@ -110,9 +110,18 @@ mod tests {
     }
 
     #[test]
+    fn layout_wald32_errors() {
+        let positions: Vec<[f32; 4]> = vec![[0.0, 1.0, 2.0, 3.0]];
+        assert_eq!(
+            wald::BVH::new(positions.as_slice().into()).err(),
+            Some(wald::Error::PrimitiveTriangulated(1))
+        );
+    }
+
+    #[test]
     fn layout_mbvh8() {
         let primitives = split_triangles(1.0);
-        let bvh = wald::BVH::new(primitives.as_slice().into());
+        let bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
         let mbvh = mbvh::BVH::new(&bvh);
         assert_eq!(mbvh.leaf_count(0), 2);
         assert_eq!(mbvh.nodes().len(), 4);
@@ -122,22 +131,25 @@ mod tests {
         assert_eq!(mbvh.nodes()[0].aabb_min, [-2.0, 0.0, -1.0]);
         assert_eq!(mbvh.nodes()[0].aabb_max, [2.0, 1.0, -1.0]);
 
-        // Update vertices only, doesn't change node bounds
+        // Update vertices only, doesn't change node bounds, except on refit
 
         let mbvh = mbvh.data();
         let bvh = bvh.data();
         let other_positions: Vec<[f32; 4]> = split_triangles(2.0);
-        let bvh = bvh.builder(other_positions.as_slice().into());
-        let mbvh = mbvh.convert(&bvh);
+        let bvh = bvh.bvh(other_positions.as_slice().into());
+        let mut mbvh = mbvh.convert(&bvh);
         assert_eq!(mbvh.nodes().len(), 4);
         assert_eq!(mbvh.nodes()[0].aabb_min, [-2.0, 0.0, -1.0]);
         assert_eq!(mbvh.nodes()[0].aabb_max, [2.0, 1.0, -1.0]);
+        mbvh.refit(0);
+        assert_eq!(mbvh.nodes()[0].aabb_min, [-4.0, 0.0, -1.0]);
+        assert_eq!(mbvh.nodes()[0].aabb_max, [4.0, 2.0, -1.0]);
 
         // Update mbvh's original
 
         let other_positions = split_triangles(3.0);
-        let bvh2: wald::BVH<'_> = wald::BVH::new(other_positions.as_slice().into());
-        let mbvh: mbvh::BVH<'_> = mbvh.data().convert(&bvh2);
+        let bvh2: wald::BVH<'_> = wald::BVH::new(other_positions.as_slice().into()).unwrap();
+        let mbvh: mbvh::BVH<'_> = mbvh.convert(&bvh2);
         assert_eq!(mbvh.nodes().len(), 4);
         assert_eq!(mbvh.nodes()[0].aabb_min, [-6.0, 0.0, -1.0]);
         assert_eq!(mbvh.nodes()[0].aabb_max, [6.0, 3.0, -1.0]);
@@ -145,8 +157,8 @@ mod tests {
         let mbvh = mbvh.data();
         let bvh = bvh.data();
         let primitives = split_triangles(10.0);
-        let bvh = bvh.builder(primitives.as_slice().into());
-        let mut mbvh = mbvh.builder(&bvh);
+        let bvh = bvh.bvh(primitives.as_slice().into());
+        let mut mbvh = mbvh.bvh(&bvh);
         mbvh.refit(0);
 
         assert_eq!(mbvh.nodes()[0].aabb_min, [-20.0, 0.0, -1.0]);
@@ -157,11 +169,11 @@ mod tests {
     fn layout_cwbvh() {
         let primitives = split_triangles(1.0);
 
-        let mut bvh = wald::BVH::new(primitives.as_slice().into());
+        let mut bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
         bvh.split_leaves(3);
         let mbvh = mbvh::BVH::new(&bvh);
 
-        let mut cwbvh = cwbvh::BVH::new(&mbvh).unwrap();
+        let cwbvh = cwbvh::BVH::new(&mbvh).unwrap();
         assert_eq!(cwbvh.nodes().len(), 1);
         assert_eq!(cwbvh.nodes()[0].primitives().collect::<Vec<u32>>(), [0, 1]);
         assert_eq!(
@@ -187,10 +199,10 @@ mod tests {
         // Update mbvh
 
         let other_positions = split_triangles(2.0);
-        let mut bvh: wald::BVH<'_> = wald::BVH::new(other_positions.as_slice().into());
+        let mut bvh: wald::BVH<'_> = wald::BVH::new(other_positions.as_slice().into()).unwrap();
         bvh.split_leaves(3);
         let mbvh: mbvh::BVH<'_> = mbvh.data().convert(&bvh);
-        cwbvh.convert(&mbvh);
+        let cwbvh = cwbvh.convert(&mbvh).unwrap();
         assert_eq!(
             cwbvh.primitives(),
             [
@@ -216,7 +228,7 @@ mod tests {
     fn layout_bvh8_cpu() {
         let primitives = split_triangles(1.0);
 
-        let bvh = wald::BVH::new(primitives.as_slice().into());
+        let bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
         let mbvh = mbvh::BVH::new(&bvh).data();
         assert_eq!(mbvh.leaf_count(0), 2);
 

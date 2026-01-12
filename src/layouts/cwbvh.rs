@@ -134,21 +134,20 @@ pub struct BVH {
 
 impl BVH {
     pub fn new(original: &mbvh::BVH) -> Result<Self, Error> {
-        let mut bvh = BVH {
+        let bvh = BVH {
             inner: ffi::CWBVH_new(),
         };
-        bvh.convert(original)?;
-        Ok(bvh)
+        bvh.convert(original)
     }
 
-    pub fn convert(&mut self, original: &mbvh::BVH) -> Result<(), Error> {
+    pub fn convert(mut self, original: &mbvh::BVH) -> Result<Self, Error> {
         if original.max_primitives_per_leaf != Some(3) {
             return Err(Error::WrongSplit);
         }
         self.inner
             .pin_mut()
             .ConvertFrom(original.inner.as_ref().unwrap(), true);
-        Ok(())
+        Ok(self)
     }
 
     pub fn nodes(&self) -> &[Node] {

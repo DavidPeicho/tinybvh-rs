@@ -1,4 +1,4 @@
-use std::ops::Deref;
+use std::{fmt::Debug, ops::Deref};
 
 use crate::{cxx_ffi, ffi, wald};
 
@@ -31,7 +31,7 @@ impl BVHData {
         self.inner.LeafCount(node_index)
     }
 
-    pub fn builder<'a>(mut self, original: &'a wald::BVH<'a>) -> BVH<'a> {
+    pub fn bvh<'a>(mut self, original: &'a wald::BVH<'a>) -> BVH<'a> {
         ffi::MBVH8_setBVH(self.inner.pin_mut(), &original.bvh.inner);
         BVH {
             bvh: self,
@@ -40,12 +40,11 @@ impl BVHData {
     }
 
     pub fn convert<'a>(mut self, original: &'a wald::BVH<'a>) -> BVH<'a> {
-        let mut builder = BVH {
+        BVH {
             bvh: self,
             original,
-        };
-        builder.convert();
-        builder
+        }
+        .convert(original)
     }
 
     pub fn nodes(&self) -> &[Node] {
@@ -68,25 +67,25 @@ impl<'a> Deref for BVH<'a> {
 
 impl<'a> BVH<'a> {
     pub fn new(original: &'a wald::BVH) -> Self {
-        let mbvh = BVHData {
+        let data = BVHData {
             inner: ffi::MBVH8_new(),
             max_primitives_per_leaf: None,
         };
-        let mut builder = mbvh.builder(original);
-        builder.convert();
-        builder
+        data.convert(original)
+    }
+
+    pub fn convert(mut self, original: &'a wald::BVH) -> Self {
+        self.bvh
+            .inner
+            .pin_mut()
+            .ConvertFrom(original.bvh.inner.as_ref().unwrap(), true);
+        self.original = original;
+        self.bvh.max_primitives_per_leaf = self.original.max_primitives_per_leaf;
+        self
     }
 
     pub fn refit(&mut self, node_index: u32) {
         self.bvh.inner.pin_mut().Refit(node_index);
-    }
-
-    pub fn convert(&mut self) {
-        self.bvh
-            .inner
-            .pin_mut()
-            .ConvertFrom(self.original.bvh.inner.as_ref().unwrap(), true);
-        self.bvh.max_primitives_per_leaf = self.original.max_primitives_per_leaf;
     }
 
     pub fn data(self) -> BVHData {

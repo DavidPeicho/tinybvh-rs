@@ -1,6 +1,25 @@
 use crate::ffi;
 use std::{fmt::Debug, marker::PhantomData, ops::Deref};
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Error {
+    PrimitiveTriangulated(usize),
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::PrimitiveTriangulated(size) => {
+                write!(
+                    f,
+                    "primitives slice must triangulated (size multiple of 3), got {}",
+                    size
+                )
+            }
+        }
+    }
+}
+
 /// "Traditional" 32-bytes BVH node layout, as proposed by Ingo Wald.
 ///
 /// Node layout used by [`BVH`].
@@ -46,7 +65,7 @@ pub struct BVHData {
 }
 
 impl BVHData {
-    pub fn builder<'a>(mut self, primitives: crate::Positions<'a>) -> BVH<'a> {
+    pub fn bvh<'a>(mut self, primitives: crate::Positions<'a>) -> BVH<'a> {
         let slice = primitives.into();
         ffi::BVH_setPrimitives(self.inner.pin_mut(), &slice);
         BVH {
@@ -108,40 +127,40 @@ impl<'a> Deref for BVH<'a> {
 }
 
 impl<'a> BVH<'a> {
-    pub fn new(primitives: crate::Positions<'a>) -> Self {
+    pub fn new(primitives: crate::Positions<'a>) -> Result<Self, Error> {
         let bvh = BVHData {
             inner: ffi::BVH_new(),
             max_primitives_per_leaf: None,
         };
-        bvh.builder(primitives).build(primitives)
+        bvh.bvh(primitives).build(primitives)
     }
 
-    pub fn new_hq(primitives: crate::Positions<'a>) -> Self {
+    pub fn new_hq(primitives: crate::Positions<'a>) -> Result<Self, Error> {
         let data = BVHData {
             inner: ffi::BVH_new(),
             max_primitives_per_leaf: None,
         };
-        data.builder(primitives).build_hq(primitives)
+        data.bvh(primitives).build_hq(primitives)
     }
 
-    pub fn build(mut self, primitives: crate::Positions<'a>) -> Self {
+    pub fn build(mut self, primitives: crate::Positions<'a>) -> Result<Self, Error> {
         if primitives.len() % 3 != 0 {
-            panic!("primitives slice must triangulated (size multiple of 3)")
+            return Err(Error::PrimitiveTriangulated((primitives.len())));
         }
         let slice = primitives.into();
         self.bvh.inner.pin_mut().Build(&slice);
         self.bvh.max_primitives_per_leaf = None;
-        self
+        Ok(self)
     }
 
-    pub fn build_hq(mut self, primitives: crate::Positions<'a>) -> Self {
+    pub fn build_hq(mut self, primitives: crate::Positions<'a>) -> Result<Self, Error> {
         if primitives.len() % 3 != 0 {
-            panic!("primitives slice must triangulated (size multiple of 3)")
+            return Err(Error::PrimitiveTriangulated((primitives.len())));
         }
         let slice = primitives.into();
         self.bvh.inner.pin_mut().BuildHQ(&slice);
         self.bvh.max_primitives_per_leaf = None;
-        self
+        Ok(self)
     }
 
     // Remove unused nodes and reduce the size of the BVH.
