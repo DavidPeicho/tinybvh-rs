@@ -1,6 +1,6 @@
-use std::{fmt::Debug, ops::Deref};
+use std::fmt::Debug;
 
-use crate::{cxx_ffi, ffi, wald};
+use crate::{ffi, layouts::impl_bvh_deref, wald};
 
 #[repr(C)]
 #[derive(Clone, Copy, Default, Debug, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]
@@ -56,14 +56,7 @@ pub struct BVH<'a> {
     bvh: BVHData,
     original: &'a wald::BVH<'a>,
 }
-
-impl<'a> Deref for BVH<'a> {
-    type Target = BVHData;
-
-    fn deref(&self) -> &Self::Target {
-        &self.bvh
-    }
-}
+impl_bvh_deref!(BVH<'a>, BVHData);
 
 impl<'a> BVH<'a> {
     pub fn new(original: &'a wald::BVH) -> Self {
@@ -74,14 +67,13 @@ impl<'a> BVH<'a> {
         data.convert(original)
     }
 
-    pub fn convert(mut self, original: &'a wald::BVH) -> Self {
-        self.bvh
-            .inner
+    pub fn convert<'b>(mut self, original: &'b wald::BVH) -> BVH<'b> {
+        let mut bvh = self.bvh;
+        bvh.inner
             .pin_mut()
             .ConvertFrom(original.bvh.inner.as_ref().unwrap(), true);
-        self.original = original;
-        self.bvh.max_primitives_per_leaf = self.original.max_primitives_per_leaf;
-        self
+        bvh.max_primitives_per_leaf = original.max_primitives_per_leaf;
+        BVH { bvh, original }
     }
 
     pub fn refit(&mut self, node_index: u32) {

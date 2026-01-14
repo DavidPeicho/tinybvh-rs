@@ -147,14 +147,15 @@ mod tests {
 
         // Update mbvh's original
 
-        let other_positions = split_triangles(3.0);
-        let bvh2: wald::BVH<'_> = wald::BVH::new(other_positions.as_slice().into()).unwrap();
-        let mbvh: mbvh::BVH<'_> = mbvh.convert(&bvh2);
+        let mbvh = {
+            let other_positions = split_triangles(3.0);
+            let bvh2: wald::BVH<'_> = wald::BVH::new(other_positions.as_slice().into()).unwrap();
+            mbvh.convert(&bvh2).data()
+        };
         assert_eq!(mbvh.nodes().len(), 4);
         assert_eq!(mbvh.nodes()[0].aabb_min, [-6.0, 0.0, -1.0]);
         assert_eq!(mbvh.nodes()[0].aabb_max, [6.0, 3.0, -1.0]);
 
-        let mbvh = mbvh.data();
         let bvh = bvh.data();
         let primitives = split_triangles(10.0);
         let bvh = bvh.bvh(primitives.as_slice().into());

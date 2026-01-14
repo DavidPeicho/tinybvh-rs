@@ -1,16 +1,24 @@
-use crate::{cxx_ffi, ffi, mbvh, wald};
+use crate::{ffi, layouts::impl_bvh_deref, mbvh};
 
 pub struct BVHData {
     pub(crate) inner: cxx::UniquePtr<ffi::BVH8_CPU>,
 }
 
 impl BVHData {
-    pub fn builder(mut self, original: &mbvh::BVHData) -> BVH {
+    pub fn bvh<'a>(mut self, original: &'a mbvh::BVH) -> BVH<'a> {
         ffi::BVH8_CPU_setBVH(self.inner.pin_mut(), &original.inner);
         BVH {
             bvh: self,
             original,
         }
+    }
+
+    pub fn convert<'a>(mut self, original: &'a mbvh::BVH) -> BVH<'a> {
+        BVH {
+            bvh: self,
+            original,
+        }
+        .convert(original)
     }
 }
 
@@ -23,27 +31,28 @@ impl crate::Intersector for BVHData {
 
 pub struct BVH<'a> {
     bvh: BVHData,
-    original: &'a mbvh::BVHData,
+    original: &'a mbvh::BVH<'a>,
 }
 
 impl<'a> BVH<'a> {
-    pub fn new(original: &'a mbvh::BVHData) -> Self {
-        let bvh = BVHData {
+    pub fn new(original: &'a mbvh::BVH) -> Self {
+        BVHData {
             inner: ffi::BVH8_CPU_new(),
-        };
-        let mut builder = bvh.builder(original);
-        builder.convert();
-        builder
+        }
+        .convert(original)
     }
 
-    pub fn convert(&mut self) {
-        self.bvh
-            .inner
+    pub fn convert<'b>(mut self, original: &'b mbvh::BVH) -> BVH<'b> {
+        let mut bvh = self.bvh;
+        bvh.inner
             .pin_mut()
             .ConvertFrom(self.original.inner.as_ref().unwrap());
+        BVH { bvh, original }
     }
 
     pub fn data(self) -> BVHData {
         self.bvh
     }
 }
+
+impl_bvh_deref!(BVH<'a>, BVHData);

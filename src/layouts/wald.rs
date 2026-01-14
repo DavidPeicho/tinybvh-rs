@@ -1,5 +1,5 @@
-use crate::ffi;
-use std::{fmt::Debug, marker::PhantomData, ops::Deref};
+use crate::{ffi, layouts::impl_bvh_deref};
+use std::{fmt::Debug, marker::PhantomData};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum Error {
@@ -117,14 +117,7 @@ pub struct BVH<'a> {
     pub(crate) bvh: BVHData,
     _phantom: PhantomData<&'a [f32; 4]>,
 }
-
-impl<'a> Deref for BVH<'a> {
-    type Target = BVHData;
-
-    fn deref(&self) -> &Self::Target {
-        &self.bvh
-    }
-}
+impl_bvh_deref!(BVH<'a>, BVHData);
 
 impl<'a> BVH<'a> {
     pub fn new(primitives: crate::Positions<'a>) -> Result<Self, Error> {
@@ -143,24 +136,32 @@ impl<'a> BVH<'a> {
         data.bvh(primitives).build_hq(primitives)
     }
 
-    pub fn build(mut self, primitives: crate::Positions<'a>) -> Result<Self, Error> {
+    pub fn build<'b>(mut self, primitives: crate::Positions<'b>) -> Result<BVH<'b>, Error> {
         if primitives.len() % 3 != 0 {
-            return Err(Error::PrimitiveTriangulated((primitives.len())));
+            return Err(Error::PrimitiveTriangulated(primitives.len()));
         }
         let slice = primitives.into();
-        self.bvh.inner.pin_mut().Build(&slice);
-        self.bvh.max_primitives_per_leaf = None;
-        Ok(self)
+        let mut bvh = self.bvh;
+        bvh.inner.pin_mut().Build(&slice);
+        bvh.max_primitives_per_leaf = None;
+        Ok(BVH {
+            bvh,
+            _phantom: PhantomData,
+        })
     }
 
-    pub fn build_hq(mut self, primitives: crate::Positions<'a>) -> Result<Self, Error> {
+    pub fn build_hq<'b>(mut self, primitives: crate::Positions<'b>) -> Result<BVH<'b>, Error> {
         if primitives.len() % 3 != 0 {
-            return Err(Error::PrimitiveTriangulated((primitives.len())));
+            return Err(Error::PrimitiveTriangulated(primitives.len()));
         }
         let slice = primitives.into();
-        self.bvh.inner.pin_mut().BuildHQ(&slice);
-        self.bvh.max_primitives_per_leaf = None;
-        Ok(self)
+        let mut bvh = self.bvh;
+        bvh.inner.pin_mut().BuildHQ(&slice);
+        bvh.max_primitives_per_leaf = None;
+        Ok(BVH {
+            bvh,
+            _phantom: PhantomData,
+        })
     }
 
     // Remove unused nodes and reduce the size of the BVH.
