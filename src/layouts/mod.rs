@@ -3,8 +3,6 @@ pub mod cwbvh;
 pub mod mbvh;
 pub mod wald;
 
-enum BVHError {}
-
 /// Implements `Deref` for a BVH type that wraps a `BVHData`.
 macro_rules! impl_bvh_deref {
     ($bvh:ty, $target:ty) => {

@@ -176,9 +176,7 @@ impl<'a> BVH<'a> {
     /// let bvh = bvh.build(triangles.as_slice().into());
     /// ```
     pub fn build<'b>(self, primitives: crate::Positions<'b>) -> Result<BVH<'b>, Error> {
-        if primitives.len() % 3 != 0 {
-            return Err(Error::PrimitiveTriangulated(primitives.len()));
-        }
+        Error::validate_triangulated(primitives.len())?;
         let slice = primitives.into();
         let mut bvh = self.bvh;
         bvh.inner.pin_mut().Build(&slice);
@@ -189,9 +187,7 @@ impl<'a> BVH<'a> {
     ///
     /// More information on the tinybvh repository (`BVH::BuildHQ()` method).
     pub fn build_hq<'b>(self, primitives: crate::Positions<'b>) -> Result<BVH<'b>, Error> {
-        if primitives.len() % 3 != 0 {
-            return Err(Error::PrimitiveTriangulated(primitives.len()));
-        }
+        Error::validate_triangulated(primitives.len())?;
         let slice = primitives.into();
         let mut bvh = self.bvh;
         bvh.inner.pin_mut().BuildHQ(&slice);
