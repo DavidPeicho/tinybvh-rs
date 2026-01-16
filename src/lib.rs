@@ -2,7 +2,17 @@
 
 //! # Notes
 //!
-//! All constructed BVH have a lifetime bound required by tinybvh, which holds to the primitives slice.
+//! BVH layouts are splitted into:
+//! - `BVHData`: For read-only operations that only read layout
+//! - `BVH`:
+//!     - For read operations mixing layout and referenced data, such as vertices
+//!     - For write operations such as refitting
+//!
+//! This separation is required to provide a safe API, since the tinybvh library
+//! stores reference to primitives / original BVH.
+//!
+//! BVH layouts that manage their own primitives have no lifetime constraint.
+//! This is for instance the case for [`cwbvh::BVH`] and [`bvh8_cpu::BVH`].
 
 mod cxx_ffi;
 mod layouts;
@@ -27,3 +37,50 @@ pub const INFINITE: f32 = 1e30; // Actual valid ieee range: 3.40282347E+38
 /// tinybvh-rs internally requires positions to be vectors of size **4**
 /// and not **3**. This is a requirement of the underlying tinybvh library.
 pub type Positions<'a> = pas::Slice<'a, [f32; 4]>;
+
+/// Error type for Wald BVH operations.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum Error {
+    /// Positions slice wasn't triangulated. Provided positions must be a multiple of 3.
+    PrimitiveTriangulated(usize),
+    /// BVH can only be re-bound to a positions slice with the same size.
+    BindInvalidPositionsLen(u32, u32),
+}
+
+impl Error {
+    pub(crate) fn validate_triangulated(prim_len: usize) -> Result<(), Error> {
+        if prim_len % 3 != 0 {
+            Err(Error::PrimitiveTriangulated(prim_len as usize))
+        } else {
+            Ok(())
+        }
+    }
+    pub(crate) fn validate_primitives_len(expected: u32, prim_count: u32) -> Result<(), Error> {
+        if expected != prim_count {
+            Err(Error::BindInvalidPositionsLen(expected, prim_count))
+        } else {
+            Ok(())
+        }
+    }
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::PrimitiveTriangulated(size) => {
+                write!(
+                    f,
+                    "primitives slice must triangulated (size multiple of 3), got {}",
+                    size
+                )
+            }
+            Error::BindInvalidPositionsLen(expected, size) => {
+                write!(
+                    f,
+                    "binding positions expected size {}, got {}",
+                    expected, size
+                )
+            }
+        }
+    }
+}

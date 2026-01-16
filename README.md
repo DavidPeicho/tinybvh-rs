@@ -1,14 +1,17 @@
 # tinybvh-rs
 
-Rust wrapper for [tinybvh](https://github.com/jbikker/tinybvh).
+Opinionated rust wrapper for [tinybvh](https://github.com/jbikker/tinybvh).
 
 ## Features
 
-Provides BVH (Bounding Volume Hierarchy) construction and intersection:
-- Construction: [`BVH`], [`BVH4`], [`CWBVH`]
-- Intersection
+* [`BVH`], [`MBVH`] [`BVH8_CPU`], [`CWBVH`]
+* Intersection
 
 For more information about each layout: [tinybvh](https://github.com/jbikker/tinybvh).
+
+Unimplemented features:
+* Optimize via `Verbose`
+* Loading/saving from/to disk
 
 ## Examples
 
@@ -27,7 +30,7 @@ let primitives = vec![
     [1.0, 0.0, -1.0, 0.0],     //
 ];
 
-let bvh = wald::BVH::new(&primitives);
+let bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
 
 // No intersection, ray pass between the primitives
 let mut ray = Ray::new([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]);
@@ -43,6 +46,28 @@ println!("Hit distance & primtive: {} / {}", ray.hit.t, ray.hit.prim); // 1.0 / 
 let mut ray = Ray::new([1.5, 0.45, 0.0], [0.0, 0.0, -1.0]);
 bvh.intersect(&mut ray);
 println!("Hit distance & primtive: {} / {}", ray.hit.t, ray.hit.prim); // 1.0 / 1
+```
+
+### CWBVH
+
+```rust
+let primitives = vec![
+    [-2.0, 1.0, -1.0, 0.0],    //
+    [-1.0, 1.0, -1.0, 0.0],    // Left triangle
+    [-2.0, 0.0, -1.0, 0.0],    //
+
+    [2.0, 1.0, -1.0, 0.0],     //
+    [2.0, 0.0, -1.0, 0.0],     // Right triangle
+    [1.0, 0.0, -1.0, 0.0],     //
+];
+let mut bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+bvh.split_leaves(3); // Required or the CWBVH will return an error
+
+let mbvh = mbvh::BVH::new(&bvh);
+let cwbvh = cwbvh::BVH::new(&mbvh).unwrap();
+
+println!("{}", cwbvh.nodes());
+println!("{}", cwbvh.primitives());
 ```
 
 ### Strided

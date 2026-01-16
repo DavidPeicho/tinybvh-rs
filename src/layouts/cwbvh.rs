@@ -1,5 +1,18 @@
-use crate::ffi;
-use std::{fmt::Debug, marker::PhantomData};
+use crate::{ffi, mbvh};
+use std::fmt::Debug;
+
+#[derive(Clone, Copy, Debug)]
+pub enum Error {
+    WrongSplit,
+}
+
+impl std::fmt::Display for Error {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Error::WrongSplit => write!(f, "expected bvh to be split up to 3 primitives per leaf",),
+        }
+    }
+}
 
 pub struct PrimitiveIter {
     primitive_base_index: u32,
@@ -115,12 +128,28 @@ impl Debug for Primitive {
 }
 
 /// CWBVH with node layout [`Node`].
-pub struct BVH<'a> {
+pub struct BVH {
     inner: cxx::UniquePtr<ffi::BVH8_CWBVH>,
-    _phantom: PhantomData<&'a [f32; 4]>,
 }
 
-impl<'a> BVH<'a> {
+impl BVH {
+    pub fn new(original: &mbvh::BVH) -> Result<Self, Error> {
+        let bvh = BVH {
+            inner: ffi::CWBVH_new(),
+        };
+        bvh.convert(original)
+    }
+
+    pub fn convert(mut self, original: &mbvh::BVH) -> Result<Self, Error> {
+        if original.max_primitives_per_leaf != Some(3) {
+            return Err(Error::WrongSplit);
+        }
+        self.inner
+            .pin_mut()
+            .ConvertFrom(original.inner.as_ref().unwrap(), true);
+        Ok(self)
+    }
+
     pub fn nodes(&self) -> &[Node] {
         // TODO: Create CWBVH node in tinybvh to avoid that.
         let ptr = ffi::CWBVH_nodes(&self.inner) as *const Node;
@@ -138,12 +167,4 @@ impl<'a> BVH<'a> {
         let count = ffi::CWBVH_primitives_count(&self.inner);
         unsafe { std::slice::from_raw_parts(ptr, count as usize) }
     }
-
-    pub fn new_internal() -> Self {
-        Self {
-            inner: ffi::CWBVH_new(),
-            _phantom: PhantomData,
-        }
-    }
 }
-super::impl_bvh!(BVH, BVH8_CWBVH);

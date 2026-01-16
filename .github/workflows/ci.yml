@@ -21,5 +21,9 @@ jobs:
         run: rustup update stable && rustup default stable
       - name: Build
         run: cargo build --verbose
+      - name: Test (Ubuntu)
+        if: matrix.platform == 'ubuntu-latest'
+        run: RUSTFLAGS='-C target-feature=+avx2' cargo test --verbose -- --show-output
       - name: Test
-        run: cargo test --verbose
+        if: matrix.platform != 'ubuntu-latest'
+        run: cargo test --verbose -- --show-output
