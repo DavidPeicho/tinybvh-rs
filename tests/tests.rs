@@ -66,6 +66,7 @@ mod tests {
                 tri_count: 1,
             },
         ];
+        assert!(bvh.refittable());
         assert_eq!(bvh.nodes().len(), expected.len());
         assert_eq!(bvh.nodes(), expected);
         assert_eq!(bvh.indices(), [0, 1]);
@@ -74,6 +75,25 @@ mod tests {
         bvh.compact();
         test_intersection(&bvh);
 
+        // Refit test
+
+        let triangles = split_triangles(1.0);
+        let bvh = bvh.build(triangles.as_slice().into()).unwrap();
+        assert!(bvh.refittable());
+
+        let scaled_triangles = split_triangles(2.0);
+        let mut bvh = bvh.bind(scaled_triangles.as_slice().into()).unwrap();
+
+        // Bounds should still be the old values before refit
+        assert_eq!(bvh.nodes()[0].min, [-2.0, 0.0, -1.0]);
+        assert_eq!(bvh.nodes()[0].max, [2.0, 1.0, -1.0]);
+        bvh.refit();
+        assert_eq!(bvh.nodes()[0].min, [-4.0, 0.0, -1.0]);
+        assert_eq!(bvh.nodes()[0].max, [4.0, 2.0, -1.0]);
+    }
+
+    #[test]
+    fn layout_wald32_strided() {
         use pas::slice_attr;
         let primitives = [
             Vertex {
@@ -101,10 +121,33 @@ mod tests {
                 ..Default::default()
             },
         ];
+
         let positions = slice_attr!(primitives, [0].position);
-        let bvh = bvh.build_hq(positions).unwrap();
-        assert_eq!(bvh.nodes().len(), expected.len());
-        assert_eq!(bvh.nodes(), expected);
+        let bvh = wald::BVH::new_hq(positions).unwrap();
+        assert_eq!(
+            bvh.nodes(),
+            [
+                wald::Node {
+                    min: [-2.0, 0.0, -1.0],
+                    max: [2.0, 1.0, -1.0],
+                    left_first: 2,
+                    tri_count: 0,
+                },
+                wald::Node::default(),
+                wald::Node {
+                    min: [-2.0, 0.0, -1.0],
+                    max: [-1.0, 1.0, -1.0],
+                    left_first: 0,
+                    tri_count: 1,
+                },
+                wald::Node {
+                    min: [1.0, 0.0, -1.0],
+                    max: [2.0, 1.0, -1.0],
+                    left_first: 1,
+                    tri_count: 1,
+                },
+            ]
+        );
         assert_eq!(bvh.indices(), [0, 1]);
         test_intersection(&bvh);
     }
@@ -114,7 +157,7 @@ mod tests {
         let positions: Vec<[f32; 4]> = vec![[0.0, 1.0, 2.0, 3.0]];
         assert_eq!(
             wald::BVH::new(positions.as_slice().into()).err(),
-            Some(wald::Error::PrimitiveTriangulated(1))
+            Some(Error::PrimitiveTriangulated(1))
         );
     }
 
@@ -136,7 +179,7 @@ mod tests {
         let mbvh = mbvh.data();
         let bvh = bvh.data();
         let other_positions: Vec<[f32; 4]> = split_triangles(2.0);
-        let bvh = bvh.bvh(other_positions.as_slice().into());
+        let bvh = bvh.bvh(other_positions.as_slice().into()).unwrap();
         let mut mbvh = mbvh.convert(&bvh);
         assert_eq!(mbvh.nodes().len(), 4);
         assert_eq!(mbvh.nodes()[0].aabb_min, [-2.0, 0.0, -1.0]);
@@ -158,8 +201,8 @@ mod tests {
 
         let bvh = bvh.data();
         let primitives = split_triangles(10.0);
-        let bvh = bvh.bvh(primitives.as_slice().into());
-        let mut mbvh = mbvh.bvh(&bvh);
+        let bvh = bvh.bvh(primitives.as_slice().into()).unwrap();
+        let mut mbvh = mbvh.bvh(&bvh).unwrap();
         mbvh.refit(0);
 
         assert_eq!(mbvh.nodes()[0].aabb_min, [-20.0, 0.0, -1.0]);
@@ -240,33 +283,4 @@ mod tests {
         }
         test_intersection(&bvh);
     }
-
-    // #[test]
-    // #[should_panic]
-    // fn builder_capture_error() {
-    //     let bvh = {
-    //         let primitives = split_triangles();
-    //         let bvh = bvh8_cpu::BVH::new(primitives.as_slice());
-    //         bvh.data()
-    //     };
-
-    //     let primitives = vec![
-    //         [-2.0, 1.0, -1.0, 0.0],
-    //         [-1.0, 1.0, -1.0, 0.0],
-    //         [-2.0, 0.0, -1.0, 0.0],
-    //     ];
-    //     bvh.builder(primitives.as_slice());
-    // }
-
-    // #[test]
-    // #[should_panic]
-    // fn panic_non_triangulated() {
-    //     let primitives = [
-    //         [1.0, 0.0, 0.0, 0.0],
-    //         [1.0, 0.0, 0.0, 0.0],
-    //         [1.0, 0.0, 0.0, 0.0],
-    //         [1.0, 0.0, 0.0, 0.0],
-    //     ];
-    //     let _ = wald::BVH::new(primitives.as_slice().into());
-    // }
 }

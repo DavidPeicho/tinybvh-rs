@@ -1,24 +1,30 @@
-use crate::{ffi, layouts::impl_bvh_deref, mbvh};
+use crate::{ffi, mbvh};
 
-pub struct BVHData {
+/// Read-write BVH.
+///
+/// At the opposite of [`wald::BVH`] and [`mbvh::BVH`], has no lifetime bound
+/// because it manages its own primitives,
+pub struct BVH {
     pub(crate) inner: cxx::UniquePtr<ffi::BVH8_CPU>,
 }
 
-impl BVHData {
-    pub fn bvh<'a>(mut self, original: &'a mbvh::BVH) -> BVH<'a> {
-        ffi::BVH8_CPU_setBVH(self.inner.pin_mut(), &original.inner);
-        BVH {
-            bvh: self,
-            original,
-        }
-    }
-
-    pub fn convert<'a>(mut self, original: &'a mbvh::BVH) -> BVH<'a> {
-        BVH {
-            bvh: self,
-            original,
+impl BVH {
+    /// Create a new BVH converting `original`.
+    pub fn new(original: &mbvh::BVH) -> Self {
+        Self {
+            inner: ffi::BVH8_CPU_new(),
         }
         .convert(original)
+    }
+
+    /// Convert (i.e., build) the BVH and bind it to `original`.
+    ///
+    /// More information on the tinybvh repository (`BVH8_CPU::ConvertFrom()` method).
+    pub fn convert(mut self, original: &mbvh::BVH) -> BVH {
+        self.inner
+            .pin_mut()
+            .ConvertFrom(original.inner.as_ref().unwrap());
+        self
     }
 }
 
@@ -28,31 +34,3 @@ impl crate::Intersector for BVHData {
         self.inner.Intersect(ray) as u32
     }
 }
-
-pub struct BVH<'a> {
-    bvh: BVHData,
-    original: &'a mbvh::BVH<'a>,
-}
-
-impl<'a> BVH<'a> {
-    pub fn new(original: &'a mbvh::BVH) -> Self {
-        BVHData {
-            inner: ffi::BVH8_CPU_new(),
-        }
-        .convert(original)
-    }
-
-    pub fn convert<'b>(mut self, original: &'b mbvh::BVH) -> BVH<'b> {
-        let mut bvh = self.bvh;
-        bvh.inner
-            .pin_mut()
-            .ConvertFrom(self.original.inner.as_ref().unwrap());
-        BVH { bvh, original }
-    }
-
-    pub fn data(self) -> BVHData {
-        self.bvh
-    }
-}
-
-impl_bvh_deref!(BVH<'a>, BVHData);

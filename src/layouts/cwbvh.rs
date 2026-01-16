@@ -1,5 +1,5 @@
 use crate::{ffi, mbvh};
-use std::{fmt::Debug, marker::PhantomData};
+use std::fmt::Debug;
 
 #[derive(Clone, Copy, Debug)]
 pub enum Error {

@@ -25,6 +25,9 @@ rust::Slice<const BVHNode> BVH_nodes(const BVH& bvh) {
 rust::Slice<const uint32_t> BVH_indices(const BVH& bvh) {
     return rust::Slice{const_cast<const uint32_t*>(bvh.primIdx), bvh.triCount};
 }
+bool BVH_refittable(const BVH& bvh) {
+    return bvh.refittable;
+}
 
 /** MBVH8 */
 
@@ -42,9 +45,6 @@ rust::Slice<const MBVH8Node> MBVH8_nodes(const MBVH8& bvh) {
 
 std::unique_ptr<BVH8_CPU> BVH8_CPU_new() {
     return std::make_unique<BVH8_CPU>();
-}
-void BVH8_CPU_setBVH(BVH8_CPU& out, const MBVH8& bvh) {
-    out.bvh8 = bvh;
 }
 
 /** CWBVH */

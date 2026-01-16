@@ -57,11 +57,13 @@ pub(crate) mod ffi {
         pub fn BVH_new() -> UniquePtr<BVH>;
         pub fn BVH_nodes(bvh: &BVH) -> &[BVHNode];
         pub fn BVH_indices(bvh: &BVH) -> &[u32];
+        pub fn BVH_refittable(bvh: &BVH) -> bool;
         pub fn BVH_setPrimitives(out: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn Build(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn BuildHQ(self: Pin<&mut BVH>, primitives: &bvhvec4slice);
         pub fn Compact(self: Pin<&mut BVH>);
         pub fn SplitLeafs(self: Pin<&mut BVH>, count: u32);
+        pub fn Refit(self: Pin<&mut BVH>, node_idx: u32);
         pub fn SAHCost(self: &BVH, node_idx: u32) -> f32;
         pub fn PrimCount(self: &BVH, node_idx: u32) -> i32;
         pub fn Intersect(self: &BVH, original: &mut Ray) -> i32;
@@ -79,7 +81,6 @@ pub(crate) mod ffi {
         // BVH8_CPU
         pub type BVH8_CPU;
         pub fn BVH8_CPU_new() -> UniquePtr<BVH8_CPU>;
-        pub fn BVH8_CPU_setBVH(out: Pin<&mut BVH8_CPU>, bvh: &MBVH8);
         pub fn ConvertFrom(self: Pin<&mut BVH8_CPU>, bvh: &MBVH8);
         pub fn Intersect(self: &BVH8_CPU, ray: &mut Ray) -> i32;
 
@@ -91,8 +92,5 @@ pub(crate) mod ffi {
         pub fn CWBVH_primitives(bvh: &BVH8_CWBVH) -> *const u8;
         pub fn CWBVH_primitives_count(bvh: &BVH8_CWBVH) -> u32;
         pub fn ConvertFrom(self: Pin<&mut BVH8_CWBVH>, bvh: &MBVH8, compact: bool);
-        pub fn Build(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
-        pub fn BuildHQ(self: Pin<&mut BVH8_CWBVH>, primitives: &bvhvec4slice);
-        pub fn Intersect(self: &BVH8_CWBVH, original: &mut Ray) -> i32;
     }
 }

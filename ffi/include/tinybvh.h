@@ -19,6 +19,7 @@ std::unique_ptr<BVH> BVH_new();
 void BVH_setPrimitives(BVH& out, const bvhvec4slice& primitives);
 rust::Slice<const BVHNode> BVH_nodes(const BVH&);
 rust::Slice<const uint32_t> BVH_indices(const BVH&);
+bool BVH_refittable(const BVH&);
 
 /* MBVH8 */
 
@@ -34,7 +35,6 @@ uint32_t MBVH8_nodes_count(const MBVH8&);
 /* BVH8_CPU */
 
 std::unique_ptr<BVH8_CPU> BVH8_CPU_new();
-void BVH8_CPU_setBVH(BVH8_CPU& out, const MBVH8& bvh);
 
 /* CWBVH */
 
