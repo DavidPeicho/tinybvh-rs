@@ -52,11 +52,7 @@ impl BVHData {
     /// ```rust
     /// # use tinybvh_rs::wald;
     ///
-    /// let triangles = vec![
-    ///     [-1.0, 1.0, 0.0, 0.0],
-    ///     [1.0, 1.0, 0.0, 0.0],
-    ///     [-1.0, 0.0, 0.0, 0.0]
-    /// ];
+    /// let triangles = vec![[-1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0], [-1.0, 0.0, 0.0, 0.0]];
     /// # let bvh = wald::BVH::new(triangles.as_slice().into()).unwrap();
     /// let data = bvh.data();
     /// let mut bvh = data.bvh(triangles.as_slice().into()).unwrap();
@@ -130,11 +126,7 @@ impl BVHData {
 /// ```rust
 /// use tinybvh_rs::wald;
 ///
-/// let triangles = vec![
-///     [-1.0, 1.0, 0.0, 0.0],
-///     [1.0, 1.0, 0.0, 0.0],
-///     [-1.0, 0.0, 0.0, 0.0]
-/// ];
+/// let triangles = vec![[-1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0], [-1.0, 0.0, 0.0, 0.0]];
 /// let bvh = wald::BVH::new(triangles.as_slice().into());
 /// ```
 pub struct BVH<'a> {
@@ -269,11 +261,7 @@ impl<'a> BVH<'a> {
     /// ```rust
     /// # use tinybvh_rs::wald;
     /// let data = {
-    ///     let mut triangles = vec![
-    ///         [-1.0, 1.0, 0.0, 0.0],
-    ///         [1.0, 1.0, 0.0, 0.0],
-    ///         [-1.0, 0.0, 0.0, 0.0]
-    ///     ];
+    ///     let mut triangles = vec![[-1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0], [-1.0, 0.0, 0.0, 0.0]];
     ///     let bvh = wald::BVH::new(triangles.as_slice().into()).unwrap();
     ///     bvh.data()
     /// }; // `triangles` is dropped by now
