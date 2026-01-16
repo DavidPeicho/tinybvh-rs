@@ -23,7 +23,7 @@ jobs:
         run: cargo build --verbose
       - name: Test (Ubuntu)
         if: matrix.platform == 'ubuntu-latest'
-        run: RUSTFLAGS='-C target-feature=avx2' cargo test --verbose -- --show-output
+        run: RUSTFLAGS='-C target-feature=+avx2' cargo test --verbose -- --show-output
       - name: Test
         if: matrix.platform != 'ubuntu-latest'
         run: cargo test --verbose -- --show-output

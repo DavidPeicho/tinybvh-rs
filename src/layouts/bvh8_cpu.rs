@@ -29,7 +29,8 @@ impl BVH {
 }
 
 #[cfg(target_feature = "avx2")]
-impl crate::Intersector for BVHData {
+impl crate::Intersector for BVH {
+    /// At the opposite of other layouts, always returns `0`
     fn intersect(&self, ray: &mut crate::Ray) -> u32 {
         self.inner.Intersect(ray) as u32
     }

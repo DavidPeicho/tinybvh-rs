@@ -18,9 +18,9 @@ mod tests {
         ]
     }
 
-    fn test_intersection<B: Intersector>(bvh: &B) {
+    fn test_intersection<B: Intersector>(bvh: &B, count_steps: bool) {
         let mut ray: Ray = Ray::new([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]);
-        assert_eq!(bvh.intersect(&mut ray), 1);
+        assert_eq!(bvh.intersect(&mut ray), if count_steps { 1 } else { 0 });
         assert_relative_eq!(ray.hit.t, INFINITE);
 
         let mut ray: Ray = Ray::new([-1.5, 0.5, 0.0], [0.0, 0.0, -1.0]);
@@ -70,10 +70,10 @@ mod tests {
         assert_eq!(bvh.nodes().len(), expected.len());
         assert_eq!(bvh.nodes(), expected);
         assert_eq!(bvh.indices(), [0, 1]);
-        test_intersection(&bvh);
+        test_intersection(&bvh, true);
 
         bvh.compact();
-        test_intersection(&bvh);
+        test_intersection(&bvh, true);
 
         // Refit test
 
@@ -149,7 +149,7 @@ mod tests {
             ]
         );
         assert_eq!(bvh.indices(), [0, 1]);
-        test_intersection(&bvh);
+        test_intersection(&bvh, true);
     }
 
     #[test]
@@ -268,22 +268,21 @@ mod tests {
         );
     }
 
+    #[cfg(target_feature = "avx2")]
     #[test]
     fn layout_bvh8_cpu() {
         let primitives = split_triangles(1.0);
 
         let bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
-        let mbvh = mbvh::BVH::new(&bvh).data();
+        let mbvh = mbvh::BVH::new(&bvh);
         assert_eq!(mbvh.leaf_count(0), 2);
 
-        #[cfg(target_feature = "avx2")]
-        {
-            let bvh8 = bvh8_cpu::BVH::new(&mbvh).data();
-            test_intersection(&bvh8);
-        }
-        #[cfg(not(target_feature = "avx2"))]
-        println!("Skipping layout_bvh8_cpu: AVX2 not supported");
-
-        test_intersection(&bvh);
+        let bvh8 = bvh8_cpu::BVH::new(&mbvh);
+        test_intersection(&bvh8, false);
     }
+
+    #[cfg(not(target_feature = "avx2"))]
+    #[ignore]
+    #[test]
+    fn layout_bvh8_cpu() {}
 }
