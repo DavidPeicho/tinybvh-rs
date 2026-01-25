@@ -48,18 +48,19 @@ bvh.intersect(&mut ray);
 println!("Hit distance & primtive: {} / {}", ray.hit.t, ray.hit.prim); // 1.0 / 1
 ```
 
+### BVH8_CPU
+
+```rust
+let mut bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+bvh.split_leaves(4); // Required or BVH8_CPU will return an error
+let mbvh = mbvh::BVH::new(&bvh);
+let bvh8 = bvh8_cpu::BVH::new(&mbvh).unwrap();
+bvh8.intersect(&mut ray);
+```
+
 ### CWBVH
 
 ```rust
-let primitives = vec![
-    [-2.0, 1.0, -1.0, 0.0],    //
-    [-1.0, 1.0, -1.0, 0.0],    // Left triangle
-    [-2.0, 0.0, -1.0, 0.0],    //
-
-    [2.0, 1.0, -1.0, 0.0],     //
-    [2.0, 0.0, -1.0, 0.0],     // Right triangle
-    [1.0, 0.0, -1.0, 0.0],     //
-];
 let mut bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
 bvh.split_leaves(3); // Required or the CWBVH will return an error
 
