@@ -1,4 +1,4 @@
-name: tinybv-rs
+name: build-test
 
 on:
   pull_request:
