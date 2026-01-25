@@ -273,12 +273,12 @@ mod tests {
     fn layout_bvh8_cpu() {
         let primitives = split_triangles(1.0);
 
-        let bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+        let mut bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
         bvh.split_leaves(4);
         let mbvh = mbvh::BVH::new(&bvh);
         assert_eq!(mbvh.leaf_count(0), 2);
 
-        let bvh8 = bvh8_cpu::BVH::new(&mbvh);
+        let bvh8 = bvh8_cpu::BVH::new(&mbvh).unwrap();
         test_intersection(&bvh8, false);
     }
 

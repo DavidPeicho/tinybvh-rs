@@ -1,4 +1,4 @@
-use crate::{ffi, mbvh};
+use crate::{ffi, mbvh, wald, Error};
 
 /// Read-write BVH.
 ///
@@ -10,7 +10,7 @@ pub struct BVH {
 
 impl BVH {
     /// Create a new BVH converting `original`.
-    pub fn new(original: &mbvh::BVH) -> Self {
+    pub fn new(original: &mbvh::BVH) -> Result<Self, Error> {
         Self {
             inner: ffi::BVH8_CPU_new(),
         }
@@ -20,11 +20,12 @@ impl BVH {
     /// Convert (i.e., build) the BVH and bind it to `original`.
     ///
     /// More information on the tinybvh repository (`BVH8_CPU::ConvertFrom()` method).
-    pub fn convert(mut self, original: &mbvh::BVH) -> BVH {
+    pub fn convert(mut self, original: &mbvh::BVH) -> Result<Self, Error> {
+        Error::validate_leaf_count(4, original.max_primitives_per_leaf)?;
         self.inner
             .pin_mut()
             .ConvertFrom(original.inner.as_ref().unwrap());
-        self
+        Ok(self)
     }
 }
 

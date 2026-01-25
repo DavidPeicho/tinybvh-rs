@@ -1,18 +1,5 @@
-use crate::{ffi, mbvh};
+use crate::{ffi, mbvh, Error};
 use std::fmt::Debug;
-
-#[derive(Clone, Copy, Debug)]
-pub enum Error {
-    WrongSplit,
-}
-
-impl std::fmt::Display for Error {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Error::WrongSplit => write!(f, "expected bvh to be split up to 3 primitives per leaf",),
-        }
-    }
-}
 
 pub struct PrimitiveIter {
     primitive_base_index: u32,
@@ -141,9 +128,7 @@ impl BVH {
     }
 
     pub fn convert(mut self, original: &mbvh::BVH) -> Result<Self, Error> {
-        if original.max_primitives_per_leaf != Some(3) {
-            return Err(Error::WrongSplit);
-        }
+        Error::validate_leaf_count(3, original.max_primitives_per_leaf)?;
         self.inner
             .pin_mut()
             .ConvertFrom(original.inner.as_ref().unwrap(), true);
