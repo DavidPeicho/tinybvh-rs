@@ -1,3 +1,13 @@
+//! "Wald" BVH layout
+//!
+//! Main BVH layout used to construct other layouts.
+//!
+//! This layout is splitted into:
+//! - [`BVHData`]: Read-only operations
+//! - [`BVH`]: Read-write operations
+//!     - Read operations mixing layout and referenced data, such as vertices
+//!     - Build, refit
+
 use crate::{ffi, layouts::impl_bvh_deref, Error};
 use std::{fmt::Debug, marker::PhantomData};
 
