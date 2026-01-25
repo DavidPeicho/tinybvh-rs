@@ -10,11 +10,13 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
+  build_test:
+    uses: ./.github/workflows/ci.yml
   publish:
     runs-on: ubuntu-latest
+    needs: build_test
     steps:
       - uses: actions/checkout@v4
-      - uses: ./.github/workflows/ci.yml
       - name: Publish
         run: cargo publish
         env:
