@@ -19,6 +19,8 @@ mod layouts;
 mod ray;
 mod traversal;
 
+use std::u32;
+
 pub(crate) use cxx_ffi::ffi;
 pub use layouts::*;
 pub use ray::*;
@@ -45,6 +47,8 @@ pub enum Error {
     PrimitiveTriangulated(usize),
     /// BVH can only be re-bound to a positions slice with the same size.
     BindInvalidPositionsLen(u32, u32),
+    /// BVH must have a maximum primitive count per leaf.
+    InvalidLeafCount(u32, u32),
 }
 
 impl Error {
@@ -58,6 +62,13 @@ impl Error {
     pub(crate) fn validate_primitives_len(expected: u32, prim_count: u32) -> Result<(), Error> {
         if expected != prim_count {
             Err(Error::BindInvalidPositionsLen(expected, prim_count))
+        } else {
+            Ok(())
+        }
+    }
+    pub(crate) fn validate_leaf_count(expected: u32, count: Option<u32>) -> Result<(), Error> {
+        if Some(expected) != count {
+            Err(Error::InvalidLeafCount(expected, count.unwrap_or(u32::MAX)))
         } else {
             Ok(())
         }
@@ -80,6 +91,9 @@ impl std::fmt::Display for Error {
                     "binding positions expected size {}, got {}",
                     expected, size
                 )
+            }
+            Error::InvalidLeafCount(expected, size) => {
+                write!(f, "expected at most {} per leaf, got {}", expected, size)
             }
         }
     }

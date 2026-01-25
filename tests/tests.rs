@@ -278,7 +278,7 @@ mod tests {
         let mbvh = mbvh::BVH::new(&bvh);
         assert_eq!(mbvh.leaf_count(0), 2);
 
-        let bvh8 = bvh8_cpu::BVH::new(&mbvh);
+        let bvh8 = bvh8_cpu::BVH::new(&mbvh).unwrap();
         test_intersection(&bvh8, false);
     }
 
