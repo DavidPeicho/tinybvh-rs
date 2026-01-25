@@ -274,6 +274,7 @@ mod tests {
         let primitives = split_triangles(1.0);
 
         let bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+        bvh.split_leaves(4);
         let mbvh = mbvh::BVH::new(&bvh);
         assert_eq!(mbvh.leaf_count(0), 2);
 
