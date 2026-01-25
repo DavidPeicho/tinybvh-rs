@@ -18,7 +18,7 @@ For more information about each layout, have a look at the original [tinybvh](ht
 ### BVH Wald
 
 ```rust
-use tinybvh_rs::{Intersector, Ray};
+use tinybvh_rs::{bvh, Intersector, Ray};
 
 let primitives = vec![
     [-2.0, 1.0, -1.0, 0.0],    //
@@ -30,7 +30,7 @@ let primitives = vec![
     [1.0, 0.0, -1.0, 0.0],     //
 ];
 
-let bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+let bvh = bvh::BVH::new(primitives.as_slice().into()).unwrap();
 
 // No intersection, ray pass between the primitives
 let mut ray = Ray::new([0.0, 0.0, 0.0], [0.0, 0.0, -1.0]);
@@ -51,7 +51,7 @@ println!("Hit distance & primtive: {} / {}", ray.hit.t, ray.hit.prim); // 1.0 / 
 ### BVH8_CPU
 
 ```rust
-let mut bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+let mut bvh = bvh::BVH::new(primitives.as_slice().into()).unwrap();
 bvh.split_leaves(4); // Required or BVH8_CPU will return an error
 let mbvh = mbvh::BVH::new(&bvh);
 let bvh8 = bvh8_cpu::BVH::new(&mbvh).unwrap();
@@ -61,7 +61,7 @@ bvh8.intersect(&mut ray);
 ### CWBVH
 
 ```rust
-let mut bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+let mut bvh = bvh::BVH::new(primitives.as_slice().into()).unwrap();
 bvh.split_leaves(3); // Required or the CWBVH will return an error
 
 let mbvh = mbvh::BVH::new(&bvh);
@@ -101,5 +101,5 @@ let vertices = [
     },
 ];
 let positions = pas::slice_attr!(vertices, [0].position);
-let bvh = wald::BVH::new(positions);
+let bvh = bvh::BVH::new(positions);
 ```

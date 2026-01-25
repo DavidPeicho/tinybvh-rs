@@ -44,22 +44,22 @@ mod tests {
     #[test]
     fn layout_wald32() {
         let triangles = split_triangles(1.0);
-        let mut bvh = wald::BVH::new(triangles.as_slice().into()).unwrap();
+        let mut bvh = bvh::BVH::new(triangles.as_slice().into()).unwrap();
         let expected = [
-            wald::Node {
+            bvh::Node {
                 min: [-2.0, 0.0, -1.0],
                 max: [2.0, 1.0, -1.0],
                 left_first: 2,
                 tri_count: 0,
             },
-            wald::Node::default(),
-            wald::Node {
+            bvh::Node::default(),
+            bvh::Node {
                 min: [-2.0, 0.0, -1.0],
                 max: [-1.0, 1.0, -1.0],
                 left_first: 0,
                 tri_count: 1,
             },
-            wald::Node {
+            bvh::Node {
                 min: [1.0, 0.0, -1.0],
                 max: [2.0, 1.0, -1.0],
                 left_first: 1,
@@ -123,24 +123,24 @@ mod tests {
         ];
 
         let positions = slice_attr!(primitives, [0].position);
-        let bvh = wald::BVH::new_hq(positions).unwrap();
+        let bvh = bvh::BVH::new_hq(positions).unwrap();
         assert_eq!(
             bvh.nodes(),
             [
-                wald::Node {
+                bvh::Node {
                     min: [-2.0, 0.0, -1.0],
                     max: [2.0, 1.0, -1.0],
                     left_first: 2,
                     tri_count: 0,
                 },
-                wald::Node::default(),
-                wald::Node {
+                bvh::Node::default(),
+                bvh::Node {
                     min: [-2.0, 0.0, -1.0],
                     max: [-1.0, 1.0, -1.0],
                     left_first: 0,
                     tri_count: 1,
                 },
-                wald::Node {
+                bvh::Node {
                     min: [1.0, 0.0, -1.0],
                     max: [2.0, 1.0, -1.0],
                     left_first: 1,
@@ -156,7 +156,7 @@ mod tests {
     fn layout_wald32_errors() {
         let positions: Vec<[f32; 4]> = vec![[0.0, 1.0, 2.0, 3.0]];
         assert_eq!(
-            wald::BVH::new(positions.as_slice().into()).err(),
+            bvh::BVH::new(positions.as_slice().into()).err(),
             Some(Error::PrimitiveTriangulated(1))
         );
     }
@@ -164,7 +164,7 @@ mod tests {
     #[test]
     fn layout_mbvh8() {
         let primitives = split_triangles(1.0);
-        let bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+        let bvh = bvh::BVH::new(primitives.as_slice().into()).unwrap();
         let mbvh = mbvh::BVH::new(&bvh);
         assert_eq!(mbvh.leaf_count(0), 2);
         assert_eq!(mbvh.nodes().len(), 4);
@@ -192,7 +192,7 @@ mod tests {
 
         let mbvh = {
             let other_positions = split_triangles(3.0);
-            let bvh2: wald::BVH<'_> = wald::BVH::new(other_positions.as_slice().into()).unwrap();
+            let bvh2: bvh::BVH<'_> = bvh::BVH::new(other_positions.as_slice().into()).unwrap();
             mbvh.convert(&bvh2).data()
         };
         assert_eq!(mbvh.nodes().len(), 4);
@@ -213,7 +213,7 @@ mod tests {
     fn layout_cwbvh() {
         let primitives = split_triangles(1.0);
 
-        let mut bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+        let mut bvh = bvh::BVH::new(primitives.as_slice().into()).unwrap();
         bvh.split_leaves(3);
         let mbvh = mbvh::BVH::new(&bvh);
 
@@ -243,7 +243,7 @@ mod tests {
         // Update mbvh
 
         let other_positions = split_triangles(2.0);
-        let mut bvh: wald::BVH<'_> = wald::BVH::new(other_positions.as_slice().into()).unwrap();
+        let mut bvh: bvh::BVH<'_> = bvh::BVH::new(other_positions.as_slice().into()).unwrap();
         bvh.split_leaves(3);
         let mbvh: mbvh::BVH<'_> = mbvh.data().convert(&bvh);
         let cwbvh = cwbvh.convert(&mbvh).unwrap();
@@ -273,7 +273,7 @@ mod tests {
     fn layout_bvh8_cpu() {
         let primitives = split_triangles(1.0);
 
-        let mut bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+        let mut bvh = bvh::BVH::new(primitives.as_slice().into()).unwrap();
         bvh.split_leaves(4);
         let mbvh = mbvh::BVH::new(&bvh);
         assert_eq!(mbvh.leaf_count(0), 2);

@@ -32,7 +32,7 @@ unsafe impl cxx::ExternType for crate::Ray {
     type Kind = cxx::kind::Trivial;
 }
 // Ensure `BVH::BVHNode` always has a trivial move ctor and no destructor
-unsafe impl cxx::ExternType for crate::wald::Node {
+unsafe impl cxx::ExternType for crate::bvh::Node {
     type Id = cxx::type_id!("tinybvh::BVHNode");
     type Kind = cxx::kind::Trivial;
 }
@@ -53,7 +53,7 @@ pub(crate) mod ffi {
 
         // BVH
         pub type BVH;
-        pub type BVHNode = crate::wald::Node;
+        pub type BVHNode = crate::bvh::Node;
         pub fn BVH_new() -> UniquePtr<BVH>;
         pub fn BVH_nodes(bvh: &BVH) -> &[BVHNode];
         pub fn BVH_indices(bvh: &BVH) -> &[u32];

@@ -1,6 +1,6 @@
 use std::{fmt::Debug, marker::PhantomData};
 
-use crate::{ffi, layouts::impl_bvh_deref, wald, Error};
+use crate::{bvh, ffi, layouts::impl_bvh_deref, Error};
 
 /// M-wide (aka 'shallow') BVH layout.
 ///
@@ -39,8 +39,8 @@ impl BVHData {
 
     /// Move this instance into a writable BVH.
     ///
-    /// More information on [`wald::BVHData::bvh`].
-    pub fn bvh<'a>(self, original: &'a wald::BVH<'a>) -> Result<BVH<'a>, Error> {
+    /// More information on [`bvh::BVHData::bvh`].
+    pub fn bvh<'a>(self, original: &'a bvh::BVH<'a>) -> Result<BVH<'a>, Error> {
         BVH::wrap(self).bind(original)
     }
 
@@ -49,7 +49,7 @@ impl BVHData {
     /// ```ignore
     /// mbvh.bvh(&original).convert(&original)
     /// ```
-    pub fn convert<'a>(self, original: &'a wald::BVH<'a>) -> BVH<'a> {
+    pub fn convert<'a>(self, original: &'a bvh::BVH<'a>) -> BVH<'a> {
         BVH::wrap(self).convert(original)
     }
 
@@ -61,10 +61,10 @@ impl BVHData {
 
 /// Read-write BVH data.
 ///
-/// BVH isn't built from primitives but from converting [`wald::BVH`].
+/// BVH isn't built from primitives but from converting [`bvh::BVH`].
 pub struct BVH<'a> {
     bvh: BVHData,
-    _phantom: PhantomData<wald::BVH<'a>>,
+    _phantom: PhantomData<bvh::BVH<'a>>,
 }
 impl_bvh_deref!(BVH<'a>, BVHData);
 
@@ -77,7 +77,7 @@ impl<'a> BVH<'a> {
     }
 
     /// Create a new BVH converting `original`.
-    pub fn new(original: &'a wald::BVH) -> Self {
+    pub fn new(original: &'a bvh::BVH) -> Self {
         let data = BVHData {
             inner: ffi::MBVH8_new(),
             max_primitives_per_leaf: None,
@@ -93,15 +93,15 @@ impl<'a> BVH<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// # use tinybvh_rs::{wald, mbvh};
+    /// # use tinybvh_rs::{bvh, mbvh};
     /// # let triangles = vec![[0.0; 4], [0.0; 4], [0.0; 4]];
-    /// let bvh = wald::BVH::new(triangles.as_slice().into()).unwrap();
+    /// let bvh = bvh::BVH::new(triangles.as_slice().into()).unwrap();
     /// let mbvh = mbvh::BVH::new(&bvh);
     ///
-    /// let other_bvh = wald::BVH::new(triangles.as_slice().into()).unwrap();
+    /// let other_bvh = bvh::BVH::new(triangles.as_slice().into()).unwrap();
     /// let mbvh = mbvh.bind(&other_bvh);
     /// ```
-    pub fn bind<'b>(self, original: &'b wald::BVH) -> Result<BVH<'b>, Error> {
+    pub fn bind<'b>(self, original: &'b bvh::BVH) -> Result<BVH<'b>, Error> {
         let mut bvh = self.bvh;
         crate::Error::validate_primitives_len(bvh.primitives_len, original.primitives_len)?;
         ffi::MBVH8_setBVH(bvh.inner.pin_mut(), &original.bvh.inner);
@@ -111,7 +111,7 @@ impl<'a> BVH<'a> {
     /// Convert (i.e., build) the BVH and bind it to `original`.
     ///
     /// More information on the tinybvh repository (`MBVH::ConvertFrom()` method).
-    pub fn convert<'b>(self, original: &'b wald::BVH) -> BVH<'b> {
+    pub fn convert<'b>(self, original: &'b bvh::BVH) -> BVH<'b> {
         let mut bvh = self.bvh;
         bvh.inner
             .pin_mut()
