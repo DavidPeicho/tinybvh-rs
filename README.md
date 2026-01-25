@@ -40,12 +40,12 @@ println!("Hit distance: {}", ray.hit.t); // 1e30
 // Intersects left primitive
 let mut ray = Ray::new([-1.5, 0.5, 0.0], [0.0, 0.0, -1.0]);
 bvh.intersect(&mut ray);
-println!("Hit distance & primtive: {} / {}", ray.hit.t, ray.hit.prim); // 1.0 / 0
+println!("Hit distance & primitive: {} / {}", ray.hit.t, ray.hit.prim); // 1.0 / 0
 
 // Intersects right primitive
 let mut ray = Ray::new([1.5, 0.45, 0.0], [0.0, 0.0, -1.0]);
 bvh.intersect(&mut ray);
-println!("Hit distance & primtive: {} / {}", ray.hit.t, ray.hit.prim); // 1.0 / 1
+println!("Hit distance & primitive: {} / {}", ray.hit.t, ray.hit.prim); // 1.0 / 1
 ```
 
 ### BVH8_CPU

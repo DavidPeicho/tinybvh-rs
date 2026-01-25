@@ -1,3 +1,7 @@
+//! 8-way BVH
+//!
+//! Based on "Accelerated Single Ray Tracing for Wide Vector Units".
+
 use crate::{ffi, mbvh, Error};
 
 /// Read-write BVH.

@@ -1,3 +1,13 @@
+//! "Wald" BVH layout
+//!
+//! Main BVH layout used to construct other layouts.
+//!
+//! This layout is split into:
+//! - [`BVHData`]: Read-only operations
+//! - [`BVH`]: Read-write operations
+//!     - Read operations mixing layout and referenced data, such as vertices
+//!     - Build, refit
+
 use crate::{ffi, layouts::impl_bvh_deref, Error};
 use std::{fmt::Debug, marker::PhantomData};
 
@@ -121,7 +131,7 @@ impl BVHData {
 /// The BVH is bound to the positions until moved into a [`BVHData`].
 /// More information on the [`BVH::bind`] method.
 ///
-/// Examples
+/// # Examples
 ///
 /// ```rust
 /// use tinybvh_rs::bvh;
@@ -243,7 +253,7 @@ impl<'a> BVH<'a> {
 
     /// Refits the BVH.
     ///
-    /// Note: This library diverge from tinybvh here that asserts if it's not reffitable.
+    /// Note: This library diverges from tinybvh here that asserts if it's not refittable.
     /// tinybvh_rs skips refitting instead.
     ///
     /// More information on the tinybvh repository (`BVH::Refit()` method).

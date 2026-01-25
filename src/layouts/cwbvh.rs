@@ -1,3 +1,7 @@
+//! CWBVH GPU-friendly layout
+//!
+//! Based on "Efficient Incoherent Ray Traversal on GPUs Through Compressed Wide BVHs".
+
 use crate::{ffi, mbvh, Error};
 use std::fmt::Debug;
 

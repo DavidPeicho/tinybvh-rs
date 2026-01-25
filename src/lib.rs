@@ -1,15 +1,20 @@
 #![cfg_attr(not(doctest), doc = include_str!("../README.md"))]
 
+//! Safe rust wrapper for the C++ [tinybvh](https://github.com/jbikker/tinybvh) library.
+//!
 //! # Notes
 //!
 //! BVH layouts are splitted into:
-//! - `BVHData`: For read-only operations that only read layout
-//! - `BVH`:
-//!     - For read operations mixing layout and referenced data, such as vertices
-//!     - For write operations such as refitting
+//! - `BVHData`: read-only operations
+//!     - Read nodes, and primitives slice
+//!     - SAH cost, etc...
+//! - `BVH`: Read-write operations
+//!     - Building, converting, refitting, etc...
+//!     - Implements `Deref` to access `BVHData` directly
 //!
-//! This separation is required to provide a safe API, since the tinybvh library
-//! stores reference to primitives / original BVH.
+//! This is a pattern used throughout this crate to ensure maximum safety,
+//! since the tinybvh library stores reference to primitives and original BVH upon
+//! build and conversion.
 //!
 //! BVH layouts that manage their own primitives have no lifetime constraint.
 //! This is for instance the case for [`cwbvh::BVH`] and [`bvh8_cpu::BVH`].

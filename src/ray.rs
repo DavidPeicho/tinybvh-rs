@@ -56,7 +56,7 @@ pub struct Ray {
 }
 
 impl Ray {
-    /// Createa new ray.
+    /// Create a new ray.
     ///
     /// Automatically computes [`Ray::r_d`].
     pub fn new(origin: [f32; 3], dir: [f32; 3]) -> Self {
