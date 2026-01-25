@@ -1,4 +1,4 @@
-name: Publish
+name: publish
 
 on:
   push:
@@ -13,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Build & Tests
+        uses: ./.github/workflows/ci.yml
       - name: Publish
         run: cargo publish
         env:
