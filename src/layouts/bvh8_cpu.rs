@@ -1,4 +1,4 @@
-use crate::{ffi, mbvh, Error};
+use crate::{ffi, mbvh, wald, Error};
 
 /// Read-write BVH.
 ///

@@ -4,14 +4,14 @@ Opinionated rust wrapper for [tinybvh](https://github.com/jbikker/tinybvh).
 
 ## Features
 
-* [`BVH`], [`MBVH`] [`BVH8_CPU`], [`CWBVH`]
+* `BVH`, `MBVH` `BVH8_CPU`, `CWBVH`
 * Intersection
-
-For more information about each layout: [tinybvh](https://github.com/jbikker/tinybvh).
 
 Unimplemented features:
 * Optimize via `Verbose`
 * Loading/saving from/to disk
+
+For more information about each layout, have a look at the original [tinybvh](https://github.com/jbikker/tinybvh) library.
 
 ## Examples
 
