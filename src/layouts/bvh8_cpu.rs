@@ -1,8 +1,8 @@
-use crate::{ffi, mbvh, wald, Error};
+use crate::{ffi, mbvh, Error};
 
 /// Read-write BVH.
 ///
-/// At the opposite of [`wald::BVH`] and [`mbvh::BVH`], has no lifetime bound
+/// At the opposite of [`crate::bvh::BVH`] and [`mbvh::BVH`], has no lifetime bound
 /// because it manages its own primitives,
 pub struct BVH {
     pub(crate) inner: cxx::UniquePtr<ffi::BVH8_CPU>,

@@ -1,7 +1,7 @@
+pub mod bvh;
 pub mod bvh8_cpu;
 pub mod cwbvh;
 pub mod mbvh;
-pub mod wald;
 
 /// Implements `Deref` for a BVH type that wraps a `BVHData`.
 macro_rules! impl_bvh_deref {

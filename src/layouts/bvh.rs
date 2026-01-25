@@ -50,10 +50,10 @@ impl BVHData {
     /// # Example
     ///
     /// ```rust
-    /// # use tinybvh_rs::wald;
+    /// # use tinybvh_rs::bvh;
     ///
     /// let triangles = vec![[-1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0], [-1.0, 0.0, 0.0, 0.0]];
-    /// # let bvh = wald::BVH::new(triangles.as_slice().into()).unwrap();
+    /// # let bvh = bvh::BVH::new(triangles.as_slice().into()).unwrap();
     /// let data = bvh.data();
     /// let mut bvh = data.bvh(triangles.as_slice().into()).unwrap();
     /// bvh.refit();
@@ -90,9 +90,9 @@ impl BVHData {
     /// # Example
     ///
     /// ```rust
-    /// # use tinybvh_rs::wald;
+    /// # use tinybvh_rs::bvh;
     /// # let primitives = vec![[0.0; 4], [0.0; 4], [0.0; 4]];
-    /// # let bvh = wald::BVH::new(primitives.as_slice().into()).unwrap();
+    /// # let bvh = bvh::BVH::new(primitives.as_slice().into()).unwrap();
     /// # let node = bvh.nodes()[0];
     /// for i in 0..node.tri_count {
     ///     let vertex_start = bvh.indices()[(node.left_first + i) as usize] as usize * 3;
@@ -124,10 +124,10 @@ impl BVHData {
 /// Examples
 ///
 /// ```rust
-/// use tinybvh_rs::wald;
+/// use tinybvh_rs::bvh;
 ///
 /// let triangles = vec![[-1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0], [-1.0, 0.0, 0.0, 0.0]];
-/// let bvh = wald::BVH::new(triangles.as_slice().into());
+/// let bvh = bvh::BVH::new(triangles.as_slice().into());
 /// ```
 pub struct BVH<'a> {
     pub(crate) bvh: BVHData,
@@ -161,10 +161,10 @@ impl<'a> BVH<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// use tinybvh_rs::wald;
+    /// use tinybvh_rs::bvh;
     ///
     /// let triangles = vec![[-1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0], [-1.0, 0.0, 0.0, 0.0]];
-    /// # let bvh = wald::BVH::new(triangles.as_slice().into()).unwrap();
+    /// # let bvh = bvh::BVH::new(triangles.as_slice().into()).unwrap();
     /// let bvh = bvh.build(triangles.as_slice().into());
     /// ```
     pub fn build<'b>(self, primitives: crate::Positions<'b>) -> Result<BVH<'b>, Error> {
@@ -193,14 +193,14 @@ impl<'a> BVH<'a> {
     /// # Examples
     ///
     /// ```rust
-    /// # use tinybvh_rs::{wald, Intersector, Ray};
+    /// # use tinybvh_rs::{bvh, Intersector, Ray};
     ///
     /// let mut triangles = vec![
     ///     [-1.0, 1.0, 0.0, 0.0],
     ///     [1.0, 1.0, 0.0, 0.0],
     ///     [-1.0, 0.0, 0.0, 0.0],
     /// ];
-    /// let bvh = wald::BVH::new(triangles.as_slice().into()).unwrap();
+    /// let bvh = bvh::BVH::new(triangles.as_slice().into()).unwrap();
     ///
     /// let mut other_triangles = vec![
     ///     [-2.0, 2.0, 0.0, 0.0],
@@ -259,10 +259,10 @@ impl<'a> BVH<'a> {
     /// the positions before a refit:
     ///
     /// ```rust
-    /// # use tinybvh_rs::wald;
+    /// # use tinybvh_rs::bvh;
     /// let data = {
     ///     let mut triangles = vec![[-1.0, 1.0, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0], [-1.0, 0.0, 0.0, 0.0]];
-    ///     let bvh = wald::BVH::new(triangles.as_slice().into()).unwrap();
+    ///     let bvh = bvh::BVH::new(triangles.as_slice().into()).unwrap();
     ///     bvh.data()
     /// }; // `triangles` is dropped by now
     /// println!("Is leaf: {}", data.nodes()[0].is_leaf()); // false
